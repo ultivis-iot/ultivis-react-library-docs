@@ -26,43 +26,84 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import { useApi, useRoutingContext } from '@hooks';
+            <pre class="prettyprint source linenums"><code>import { useApi, useRouting } from '@hooks';
 import { cloneDeep } from 'lodash-es';
+import { useDashboardStore } from '../store/useDashboardStore';
 
 /**
- * A custom hook that provides various methods for managing dashboards, including creating, updating, and managing widgets.
- *
- * @returns {Object} A collection of methods for interacting with dashboards.
+ * Custom hook for managing dashboards and widgets.
+ * @returns {Object} Dashboard management object containing:
+ * @returns {Object} breakpoints - Responsive breakpoint configuration
+ * @returns {Object} cols - Column configuration for different breakpoints
+ * @returns {Function} postDashboard - Creates a new dashboard
+ * @returns {Function} putDashboard - Updates an existing dashboard
+ * @returns {Function} postWidget - Adds a new widget to the dashboard
+ * @returns {Function} putWidget - Edits or removes a widget from the dashboard
+ * @returns {Function} putLayout - Updates the layout of widgets
+ * @returns {Function} calculateBreakpoint - Calculates breakpoint and columns for given width
+ * @returns {Function} getWidgetWidth - Gets widget width based on max columns
  */
+
+/**
+ * Calculates the maximum number of grid columns based on container width.
+ * @param {number} width - Container width in pixels
+ * @returns {number} Number of grid columns (1, 4, 6, or 12)
+ */
+const getWindowSize = (width) => {
+  if (width > 1280) return 12;
+  if (width > 768) return 6;
+  if (width > 480) return 4;
+  return 1;
+};
+
 export const useDashboard = () => {
-  const { appName } = useRoutingContext();
-  const { postChildInventory, postInventory, putInventory } = useApi();
+  const { appName } = useRouting();
+  const { postChildInventory, postInventory } = useApi();
+  const { containerWidth, draftDashboard, setDraftDashboard, isFrozen } =
+    useDashboardStore((state) => ({
+      containerWidth: state.containerWidth,
+      draftDashboard: state.draftDashboard,
+      setDraftDashboard: state.setDraftDashboard,
+      isFrozen: state.isFrozen,
+    }));
 
-  const getWindowSize = () => {
-    const width = window.innerWidth;
+  const breakpoints = isFrozen
+    ? {
+        xl: 1280,
+        lg: 1024,
+        md: 768,
+        sm: 576,
+        xs: 480,
+        xss: 0,
+      }
+    : { xl: 1280 };
 
-    if (width >= 1200) return 12;
-    if (width >= 996) return 10;
-    if (width >= 768) return 6;
-    if (width >= 480) return 4;
-    return 2;
-  };
+  const cols = isFrozen
+    ? {
+        xl: 12,
+        lg: 6,
+        md: 6,
+        sm: 4,
+        xs: 4,
+        xss: 1,
+      }
+    : { xl: 12 };
 
   const methods = {
     /**
-     * Creates a new dashboard and returns its information.
-     *
-     * @param {Object} params - Parameters for creating the dashboard.
-     * @param {number} params.widgetMargin - The margin value for widgets.
-     * @param {string} params.headerStyle - The header style of the dashboard.
-     * @param {number} params.priority - The priority of the dashboard.
-     * @param {string} params.name - The name of the dashboard.
-     * @param {string} params.icon - The icon used for the dashboard.
-     * @param {string} params.type - The type of the dashboard.
-     * @param {boolean} params.global - Indicates if the dashboard is global.
-     * @param {string} params.category - The category of the dashboard.
-     * @param {string} [params.sourceId] - The ID of the parent source, if applicable.
-     * @returns {Promise&lt;Object>} A promise resolving to the response data of the created dashboard.
+     * Creates a new dashboard.
+     * @param {Object} params - Dashboard parameters
+     * @param {number} params.widgetMargin - Margin between widgets
+     * @param {string} params.headerStyle - Header styling class
+     * @param {number} params.priority - Dashboard priority
+     * @param {string} params.name - Dashboard name
+     * @param {string} params.icon - Dashboard icon
+     * @param {string} params.type - Dashboard type
+     * @param {boolean} params.global - Whether dashboard is global
+     * @param {string} params.category - Dashboard category
+     * @param {string} params.sourceId - Source identifier
+     * @param {Object} params.period - Dashboard period configuration
+     * @returns {Promise&lt;Object>} Created dashboard response
      */
     postDashboard: async ({
       widgetMargin,
@@ -74,162 +115,173 @@ export const useDashboard = () => {
       global,
       category,
       sourceId,
+      period,
     }) => {
-      const obj = {
+      const dashboardObject = {
         u5s_Dashboard: {
           name,
           priority,
           icon,
+          period,
           widgetClasses: {
             [headerStyle]: true,
           },
           widgetMargin,
         },
       };
-      obj['name'] = name;
+      dashboardObject.name = name;
 
       if (category === 'device') {
-        obj['u5s_Dashboard']['deviceTypeValue'] = type;
+        dashboardObject.u5s_Dashboard.deviceTypeValue = type;
       }
 
       // 모든 디바이스에 대시보드 적용
       if (global) {
-        obj['c8y_Global'] = {};
-        obj['u5s_Dashboard']['deviceType'] = true;
-        obj[`u5s_Dashboard!type!${type}`] = {};
+        dashboardObject.c8y_Global = {};
+        dashboardObject.u5s_Dashboard.deviceType = true;
+        dashboardObject.u5s_Dashboard.children = {};
+        dashboardObject[`u5s_Dashboard!type!${type}`] = {};
 
-        return await postInventory(obj);
+        return await postInventory(dashboardObject);
       }
 
       if (!global &amp;&amp; sourceId) {
-        obj[`u5s_Dashboard!${category}!${sourceId}`] = {};
-        return await postChildInventory(obj, sourceId);
+        dashboardObject[`u5s_Dashboard!${category}!${sourceId}`] = {};
+        return await postChildInventory(dashboardObject, sourceId);
       }
 
-      obj['c8y_Global'] = {};
-      obj[`u5s_Dashboard!name!home-${appName}`] = {};
+      dashboardObject.c8y_Global = {};
+      dashboardObject[`u5s_Dashboard!name!home-${appName}`] = {};
 
-      return await postInventory(obj);
+      return await postInventory(dashboardObject);
     },
 
-    // 대시보드 수정
     /**
      * Updates an existing dashboard with new details.
-     *
-     * @param {Object} params - Parameters for updating the dashboard.
-     * @param {number} params.widgetMargin - The updated margin value for widgets.
-     * @param {string} params.headerStyle - The updated header style.
-     * @param {number} params.priority - The updated priority.
-     * @param {string} params.name - The updated name.
-     * @param {string} params.icon - The updated icon.
-     * @param {Object} params.dashboard - The existing dashboard managedobject to be updated.
-     * @returns {Promise&lt;Object>} A promise resolving to the response data of the updated dashboard.
+     * @param {Object} params - Update parameters
+     * @param {number} params.widgetMargin - Margin between widgets
+     * @param {string} params.headerStyle - Header styling class
+     * @param {number} params.priority - Dashboard priority
+     * @param {string} params.name - Dashboard name
+     * @param {string} params.icon - Dashboard icon
+     * @param {Object} params.period - Dashboard period configuration
+     * @returns {Object} Updated dashboard in store
      */
-    putDashboard: async ({
+    putDashboard: ({
       widgetMargin,
       headerStyle,
       priority,
       name,
       icon,
-      dashboard,
+      period,
     }) => {
-      const obj = cloneDeep(dashboard);
-      obj['name'] = name;
-      obj['u5s_Dashboard']['priority'] = priority;
-      obj['u5s_Dashboard']['icon'] = icon;
-      obj['u5s_Dashboard']['widgetMargin'] = widgetMargin;
-      obj['u5s_Dashboard']['name'] = name;
+      const cloneDashboard = cloneDeep(draftDashboard);
+      cloneDashboard.name = name;
+      cloneDashboard.u5s_Dashboard.priority = priority;
+      cloneDashboard.u5s_Dashboard.icon = icon;
+      cloneDashboard.u5s_Dashboard.widgetMargin = widgetMargin;
+      cloneDashboard.u5s_Dashboard.name = name;
+      cloneDashboard.u5s_Dashboard.period = period;
 
-      delete obj['u5s_Dashboard']['widgetClasses'];
-      obj['u5s_Dashboard']['widgetClasses'] = { [headerStyle]: true };
+      delete cloneDashboard.u5s_Dashboard.widgetClasses;
+      cloneDashboard.u5s_Dashboard.widgetClasses = { [headerStyle]: true };
 
-      return await putInventory(dashboard.id, obj);
+      return setDraftDashboard(cloneDashboard);
     },
 
-    // 위젯 추가
     /**
-     * Adds a new widget to a dashboard.
-     *
-     * @param {Object} params - Parameters for adding the widget.
-     * @param {Object} params.dashboard - The dashboard managedobject to add the widget to.
-     * @param {Object} params.obj - The widget object to add.
-     * @returns {Promise&lt;Object>} A promise resolving to the response data of the updated dashboard.
+     * Adds a new widget to the dashboard.
+     * @param {Object} params - Widget parameters
+     * @param {Object} params.widget - Widget object to add
+     * @returns {Object} Updated dashboard in store
      */
-    postWidget: async ({ dashboard, obj }) => {
-      const cloneDashboard = cloneDeep(dashboard);
-      const widgetsLength = Object.keys(
-        dashboard['u5s_Dashboard']['children'] ?? {}
-      ).length;
-
+    postWidget: ({ widget }) => {
+      const cloneDashboard = cloneDeep(draftDashboard);
       // id 생성
       const id = String(Math.random()).substring(2);
+      const widgets = Object.values(
+        cloneDashboard?.u5s_Dashboard?.children ?? []
+      );
 
-      const widget = {
-        ...obj,
+      const { maxYPosition, maxRowIndex } = widgets.reduce(
+        (acc, widget) => {
+          return {
+            maxYPosition: Math.max(acc.maxYPosition, widget.y),
+            maxRowIndex: Math.max(acc.maxRowIndex, widget.y + widget.h),
+          };
+        },
+        { maxYPosition: 0, maxRowIndex: 0 }
+      );
+
+      // 현재 행에 배치된 위젯의 넓이 체크크
+      const maxXPositionInRow = widgets.reduce((maxX, widget) => {
+        return widget.y === maxYPosition
+          ? Math.max(maxX, widget.x + widget.w)
+          : maxX;
+      }, 0);
+
+      const isOver = maxXPositionInRow + 4 &lt;= getWindowSize(containerWidth);
+
+      const widgetObject = {
+        ...widget,
         i: id,
-        x: (widgetsLength * 4) % getWindowSize(),
-        y: 0,
+        x: isOver ? maxXPositionInRow : 0,
+        y: isOver ? maxYPosition : maxRowIndex,
         w: 4,
         h: 4,
       };
 
       // 복사한 대시보드에 위젯 추가
-      cloneDashboard['u5s_Dashboard']['children'] = {
-        ...cloneDashboard['u5s_Dashboard']['children'],
-        [id]: widget,
+      cloneDashboard.u5s_Dashboard.children = {
+        ...cloneDashboard.u5s_Dashboard.children,
+        [id]: widgetObject,
       };
 
-      return putInventory(dashboard.id, cloneDashboard);
+      return setDraftDashboard(cloneDashboard);
     },
 
-    /** 위젯 편집 , action = 'edit' | 'remove' */
     /**
-     * Edits or removes a widget in a dashboard.
-     *
-     * @param {Object} params - Parameters for managing the widget.
-     * @param {Object} params.dashboard - The dashboard managedobject containing the widget.
-     * @param {Object} params.widget - The updated widget object (for editing).
-     * @param {string} params.widgetId - The ID of the widget to edit or remove.
-     * @param {string} params.action - The action to perform, either 'edit' or 'remove'.
-     * @returns {Promise&lt;Object>} A promise resolving to the response data of the updated dashboard.
+     * Edits or removes a widget from the dashboard.
+     * @param {Object} params - Widget management parameters
+     * @param {Object} params.widget - Updated widget object (for editing)
+     * @param {string} params.widgetId - Widget ID to edit or remove
+     * @param {string} params.action - Action type: 'edit' | 'remove'
+     * @returns {Object} Updated dashboard in store
      */
-    putWidget: async ({ dashboard, widget, widgetId, action }) => {
-      const cloneDashboard = cloneDeep(dashboard);
+    putWidget: ({ widget, widgetId, action }) => {
+      const cloneDashboard = cloneDeep(draftDashboard);
 
       if (action === 'edit') {
-        cloneDashboard['u5s_Dashboard']['children'] = {
-          ...cloneDashboard['u5s_Dashboard']['children'],
+        cloneDashboard.u5s_Dashboard.children = {
+          ...cloneDashboard.u5s_Dashboard.children,
           [widgetId]: widget,
         };
       }
 
       if (action === 'remove') {
-        delete cloneDashboard['u5s_Dashboard']['children'][widgetId];
+        delete cloneDashboard.u5s_Dashboard.children[widgetId];
       }
 
-      return putInventory(dashboard.id, cloneDashboard);
+      return setDraftDashboard(cloneDashboard);
     },
 
     /**
-     * Updates the layout of widgets in a dashboard.
-     *
-     * @param {Object} dashboard - The dashboard managedobject containing the current widgets.
-     * @param {Array&lt;Object>} newLayout - An array of layout objects, each representing a widget's new position and size.
-     * @param {string} newLayout[].i - The ID of the widget to update.
-     * @param {number} newLayout[].x - The new x-coordinate of the widget.
-     * @param {number} newLayout[].y - The new y-coordinate of the widget.
-     * @param {number} newLayout[].w - The new width of the widget.
-     * @param {number} newLayout[].h - The new height of the widget.
-     *
-     * @returns {Promise&lt;void>} A promise that resolves when the dashboard layout has been successfully updated.
+     * Updates the layout of widgets in the dashboard.
+     * @param {Array&lt;Object>} newLayout - Layout objects with widget position and size
+     * @param {string} newLayout[].i - Widget ID
+     * @param {number} newLayout[].x - X position in grid
+     * @param {number} newLayout[].y - Y position in grid
+     * @param {number} newLayout[].w - Width in grid units
+     * @param {number} newLayout[].h - Height in grid units
+     * @returns {Object} Updated dashboard in store
      */
-    putLayout: async (dashboard, newLayout) => {
-      const updatedDashboard = cloneDeep(dashboard);
+    putLayout: (newLayout) => {
+      const updatedDashboard = cloneDeep(draftDashboard);
 
       newLayout.forEach(({ i, x, y, w, h }) => {
-        const widget = updatedDashboard['u5s_Dashboard']['children'][i];
+        const widget = updatedDashboard.u5s_Dashboard.children[i];
         if (widget) {
-          updatedDashboard['u5s_Dashboard']['children'][i] = {
+          updatedDashboard.u5s_Dashboard.children[i] = {
             ...widget,
             x,
             y,
@@ -239,11 +291,40 @@ export const useDashboard = () => {
         }
       });
 
-      await putInventory(dashboard.id, updatedDashboard);
+      return setDraftDashboard(updatedDashboard);
+    },
+
+    /**
+     * Calculates breakpoint and columns based on container width.
+     * NOTE: 편집 모드시에 무조건 cols 12
+     * @param {number} width - Container width in pixels
+     * @returns {Object} Object containing breakpoint name and column count
+     * @returns {string} breakpoint - Breakpoint identifier (xl, lg, md, sm, xs, xss)
+     * @returns {number} cols - Number of columns for the breakpoint
+     */
+    calculateBreakpoint: (width) => {
+      if (!isFrozen) return { breakpoint: 'xl', cols: 12 };
+      if (width > 1280) return { breakpoint: 'xl', cols: 12 };
+      if (width > 1024) return { breakpoint: 'lg', cols: 6 };
+      if (width > 768) return { breakpoint: 'md', cols: 6 };
+      if (width > 576) return { breakpoint: 'sm', cols: 4 };
+      if (width > 480) return { breakpoint: 'xs', cols: 4 };
+      return { breakpoint: 'xss', cols: 1 };
+    },
+
+    /**
+     * Gets the appropriate widget width based on maximum columns.
+     * @param {number} maxCols - Maximum number of columns available
+     * @param {Object} widget - Widget object
+     * @param {number} widget.w - Widget's desired width
+     * @returns {number} Actual widget width (limited by maxCols)
+     */
+    getWidgetWidth: (maxCols, widget) => {
+      return maxCols > widget.w ? widget.w : maxCols;
     },
   };
 
-  return methods;
+  return { breakpoints, cols, ...methods };
 };
 </code></pre>
         </article>
@@ -255,13 +336,13 @@ export const useDashboard = () => {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#ActionBar">ActionBar</a></li><li><a href="global.html#ActionItem">ActionItem</a></li><li><a href="global.html#AddData">AddData</a></li><li><a href="global.html#AggregationPicker">AggregationPicker</a></li><li><a href="global.html#AppItem">AppItem</a></li><li><a href="global.html#AppProviders">AppProviders</a></li><li><a href="global.html#AppSwitcher">AppSwitcher</a></li><li><a href="global.html#AppSwitcherItem">AppSwitcherItem</a></li><li><a href="global.html#AuthProvider">AuthProvider</a></li><li><a href="global.html#ComputedPropertyConfig">ComputedPropertyConfig</a></li><li><a href="global.html#ConetextDashboardActionItems">ConetextDashboardActionItems</a></li><li><a href="global.html#Configuration">Configuration</a></li><li><a href="global.html#ContextDashboard">ContextDashboard</a></li><li><a href="global.html#ContextGrid">ContextGrid</a></li><li><a href="global.html#ContextWidgetActionItems">ContextWidgetActionItems</a></li><li><a href="global.html#ContextWidgetWrapper">ContextWidgetWrapper</a></li><li><a href="global.html#DarkProvider">DarkProvider</a></li><li><a href="global.html#DashboardModal">DashboardModal</a></li><li><a href="global.html#DataDetail">DataDetail</a></li><li><a href="global.html#DataItem">DataItem</a></li><li><a href="global.html#DataList">DataList</a></li><li><a href="global.html#DataManager">DataManager</a></li><li><a href="global.html#DataMenu">DataMenu</a></li><li><a href="global.html#DatePicker">DatePicker</a></li><li><a href="global.html#DeviceTree">DeviceTree</a></li><li><a href="global.html#DialogContent">DialogContent</a></li><li><a href="global.html#DynamicWidget">DynamicWidget</a></li><li><a href="global.html#EmptyState">EmptyState</a></li><li><a href="global.html#FallbackUi">FallbackUi</a></li><li><a href="global.html#ForgotPassword">ForgotPassword</a></li><li><a href="global.html#FormCheckboxField">FormCheckboxField</a></li><li><a href="global.html#FormColorField">FormColorField</a></li><li><a href="global.html#FormInputArrayField">FormInputArrayField</a></li><li><a href="global.html#FormInputField">FormInputField</a></li><li><a href="global.html#FormRadioField">FormRadioField</a></li><li><a href="global.html#FormSelectField">FormSelectField</a></li><li><a href="global.html#GeneralSection">GeneralSection</a></li><li><a href="global.html#GroupAccordion">GroupAccordion</a></li><li><a href="global.html#Header">Header</a></li><li><a href="global.html#HeaderDivider">HeaderDivider</a></li><li><a href="global.html#HeaderStyleEnum">HeaderStyleEnum</a></li><li><a href="global.html#LastUpdated">LastUpdated</a></li><li><a href="global.html#Layout">Layout</a></li><li><a href="global.html#LayoutSection">LayoutSection</a></li><li><a href="global.html#LazyLoader">LazyLoader</a></li><li><a href="global.html#LinkTab">LinkTab</a></li><li><a href="global.html#Loader">Loader</a></li><li><a href="global.html#Loading">Loading</a></li><li><a href="global.html#LoadingDots">LoadingDots</a></li><li><a href="global.html#LoadingSpinner">LoadingSpinner</a></li><li><a href="global.html#Login">Login</a></li><li><a href="global.html#LoginForm">LoginForm</a></li><li><a href="global.html#MenuBar">MenuBar</a></li><li><a href="global.html#NotFound">NotFound</a></li><li><a href="global.html#PreviewSection">PreviewSection</a></li><li><a href="global.html#PreviewWidget">PreviewWidget</a></li><li><a href="global.html#PropertySelectTable">PropertySelectTable</a></li><li><a href="global.html#PropertySelector">PropertySelector</a></li><li><a href="global.html#PropertyTable">PropertyTable</a></li><li><a href="global.html#QuestionTooltip">QuestionTooltip</a></li><li><a href="global.html#RemoveModal">RemoveModal</a></li><li><a href="global.html#RenderEmptyStateMessage">RenderEmptyStateMessage</a></li><li><a href="global.html#SearchDeviceTree">SearchDeviceTree</a></li><li><a href="global.html#SelectWidget">SelectWidget</a></li><li><a href="global.html#Sidebar">Sidebar</a></li><li><a href="global.html#SidebarAccordionItem">SidebarAccordionItem</a></li><li><a href="global.html#SidebarItem">SidebarItem</a></li><li><a href="global.html#StaticDashboard">StaticDashboard</a></li><li><a href="global.html#StaticWidgetWrapper">StaticWidgetWrapper</a></li><li><a href="global.html#TabItem">TabItem</a></li><li><a href="global.html#Tabs">Tabs</a></li><li><a href="global.html#Toaster">Toaster</a></li><li><a href="global.html#TreeItem">TreeItem</a></li><li><a href="global.html#TreeParent">TreeParent</a></li><li><a href="global.html#UltivisDeviceProvider">UltivisDeviceProvider</a></li><li><a href="global.html#UserMenu">UserMenu</a></li><li><a href="global.html#UserMenuItem">UserMenuItem</a></li><li><a href="global.html#WidgetDatePicker">WidgetDatePicker</a></li><li><a href="global.html#WidgetModal">WidgetModal</a></li><li><a href="global.html#addLanguagePack">addLanguagePack</a></li><li><a href="global.html#alarmPeriod">alarmPeriod</a></li><li><a href="global.html#alarmSeverityIcon">alarmSeverityIcon</a></li><li><a href="global.html#alarmStatusIcon">alarmStatusIcon</a></li><li><a href="global.html#baseSchema">baseSchema</a></li><li><a href="global.html#chartDisplayOptions">chartDisplayOptions</a></li><li><a href="global.html#chartTypeOptions">chartTypeOptions</a></li><li><a href="global.html#checkRole">checkRole</a></li><li><a href="global.html#cn">cn</a></li><li><a href="global.html#createOperation">createOperation</a></li><li><a href="global.html#customPeriod">customPeriod</a></li><li><a href="global.html#dataMinMaxRequireSchema">dataMinMaxRequireSchema</a></li><li><a href="global.html#dataRequireSchema">dataRequireSchema</a></li><li><a href="global.html#dataSchema">dataSchema</a></li><li><a href="global.html#deviceSchema">deviceSchema</a></li><li><a href="global.html#deviceTypeDashboardForDevice">deviceTypeDashboardForDevice</a></li><li><a href="global.html#deviceTypeDashboardForProperty">deviceTypeDashboardForProperty</a></li><li><a href="global.html#encodeAuth">encodeAuth</a></li><li><a href="global.html#fontSchema">fontSchema</a></li><li><a href="global.html#fontWeightSchema">fontWeightSchema</a></li><li><a href="global.html#fontWeights">fontWeights</a></li><li><a href="global.html#fonts">fonts</a></li><li><a href="global.html#getActiveData">getActiveData</a></li><li><a href="global.html#getAlarms">getAlarms</a></li><li><a href="global.html#getAllInventory">getAllInventory</a></li><li><a href="global.html#getApiMap">getApiMap</a></li><li><a href="global.html#getBinary">getBinary</a></li><li><a href="global.html#getChildAssetsList">getChildAssetsList</a></li><li><a href="global.html#getChildDevicesList">getChildDevicesList</a></li><li><a href="global.html#getComputedType">getComputedType</a></li><li><a href="global.html#getCurrentUser">getCurrentUser</a></li><li><a href="global.html#getDashboards">getDashboards</a></li><li><a href="global.html#getDataPoints">getDataPoints</a></li><li><a href="global.html#getDatapointsFromLocal">getDatapointsFromLocal</a></li><li><a href="global.html#getEvents">getEvents</a></li><li><a href="global.html#getEventsByDate">getEventsByDate</a></li><li><a href="global.html#getEventsByFragment">getEventsByFragment</a></li><li><a href="global.html#getEventsByType">getEventsByType</a></li><li><a href="global.html#getExternalId">getExternalId</a></li><li><a href="global.html#getInventory">getInventory</a></li><li><a href="global.html#getInventoryByFragmentType">getInventoryByFragmentType</a></li><li><a href="global.html#getInventoryByText">getInventoryByText</a></li><li><a href="global.html#getLoginOptions">getLoginOptions</a></li><li><a href="global.html#getMeasurements">getMeasurements</a></li><li><a href="global.html#getMeasurementsByDate">getMeasurementsByDate</a></li><li><a href="global.html#getMeasurementsByFragment">getMeasurementsByFragment</a></li><li><a href="global.html#getMeasurementsBySeries">getMeasurementsBySeries</a></li><li><a href="global.html#getSchema">getSchema</a></li><li><a href="global.html#getSupported">getSupported</a></li><li><a href="global.html#getTargetPath">getTargetPath</a></li><li><a href="global.html#getTypesFromLocal">getTypesFromLocal</a></li><li><a href="global.html#hasAccessedDashboardIdid">hasAccessedDashboardId</a></li><li><a href="global.html#homeDeviceInventory">homeDeviceInventory</a></li><li><a href="global.html#homeGroupInventory">homeGroupInventory</a></li><li><a href="global.html#humanizeAppName">humanizeAppName</a></li><li><a href="global.html#initializeState">initializeState</a></li><li><a href="global.html#intervalSchema">intervalSchema</a></li><li><a href="global.html#intervals">intervals</a></li><li><a href="global.html#isParentAssignedGroup">isParentAssignedGroup</a></li><li><a href="global.html#isSameDatapoint">isSameDatapoint</a></li><li><a href="global.html#isSameId">isSameId</a></li><li><a href="global.html#isSameType">isSameType</a></li><li><a href="global.html#list">list</a></li><li><a href="global.html#load">load</a></li><li><a href="global.html#manageRole">manageRole</a></li><li><a href="global.html#period">period</a></li><li><a href="global.html#periodSchema">periodSchema</a></li><li><a href="global.html#postChildInventory">postChildInventory</a></li><li><a href="global.html#postEvents">postEvents</a></li><li><a href="global.html#postInventory">postInventory</a></li><li><a href="global.html#propertySchema">propertySchema</a></li><li><a href="global.html#putAlarm">putAlarm</a></li><li><a href="global.html#putDataPoints">putDataPoints</a></li><li><a href="global.html#putInventory">putInventory</a></li><li><a href="global.html#realtimeSub">realtimeSub</a></li><li><a href="global.html#realtimeUnSub">realtimeUnSub</a></li><li><a href="global.html#register">register</a></li><li><a href="global.html#registerList">registerList</a></li><li><a href="global.html#removeInventory">removeInventory</a></li><li><a href="global.html#resetQueryDeleteInvalidated">resetQueryDeleteInvalidated</a></li><li><a href="global.html#resetQueryInvalidated">resetQueryInvalidated</a></li><li><a href="global.html#setBasicAuth">setBasicAuth</a></li><li><a href="global.html#setDatapointsToLocal">setDatapointsToLocal</a></li><li><a href="global.html#setIsDevice">setIsDevice</a></li><li><a href="global.html#setIsFullScreen">setIsFullScreen</a></li><li><a href="global.html#setTypesToLocal">setTypesToLocal</a></li><li><a href="global.html#textSchema">textSchema</a></li><li><a href="global.html#useApi">useApi</a></li><li><a href="global.html#useCustomMutation">useCustomMutation</a></li><li><a href="global.html#useDashboard">useDashboard</a></li><li><a href="global.html#useDashboardActions">useDashboardActions</a></li><li><a href="global.html#useDataManager">useDataManager</a></li><li><a href="global.html#useDatapointActions">useDatapointActions</a></li><li><a href="global.html#useDatePickerStore">useDatePickerStore</a></li><li><a href="global.html#useDeviceInventory">useDeviceInventory</a></li><li><a href="global.html#useDeviceTree">useDeviceTree</a></li><li><a href="global.html#useIntersectionObserver">useIntersectionObserver</a></li><li><a href="global.html#useInventoryContext">useInventoryContext</a></li><li><a href="global.html#useRoutingContext">useRoutingContext</a></li><li><a href="global.html#useSidebarStore">useSidebarStore</a></li><li><a href="global.html#useUpdateForTypeDashboard">useUpdateForTypeDashboard</a></li><li><a href="global.html#useUpdatedConfig">useUpdatedConfig</a></li><li><a href="global.html#useWidgetActions">useWidgetActions</a></li><li><a href="global.html#useWidgetSize">useWidgetSize</a></li><li><a href="global.html#yAxisPositionOptions">yAxisPositionOptions</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-@ultivis-iot_react.html">@ultivis-iot/react</a></li></ul><h3>Global</h3><ul><li><a href="global.html#Accordion">Accordion</a></li><li><a href="global.html#AccordionContent">AccordionContent</a></li><li><a href="global.html#AccordionItem">AccordionItem</a></li><li><a href="global.html#AccordionTrigger">AccordionTrigger</a></li><li><a href="global.html#ActionBar">ActionBar</a></li><li><a href="global.html#ActionItem">ActionItem</a></li><li><a href="global.html#AddData">AddData</a></li><li><a href="global.html#AggregationPicker">AggregationPicker</a></li><li><a href="global.html#AppItem">AppItem</a></li><li><a href="global.html#AppProviders">AppProviders</a></li><li><a href="global.html#AppSwitcher">AppSwitcher</a></li><li><a href="global.html#AppSwitcherItem">AppSwitcherItem</a></li><li><a href="global.html#AuthProvider">AuthProvider</a></li><li><a href="global.html#Badge">Badge</a></li><li><a href="global.html#BrandingProvider">BrandingProvider</a></li><li><a href="global.html#Button">Button</a></li><li><a href="global.html#Calendar">Calendar</a></li><li><a href="global.html#Card">Card</a></li><li><a href="global.html#CardContent">CardContent</a></li><li><a href="global.html#CardDescription">CardDescription</a></li><li><a href="global.html#CardFooter">CardFooter</a></li><li><a href="global.html#CardHeader">CardHeader</a></li><li><a href="global.html#CardTitle">CardTitle</a></li><li><a href="global.html#Carousel">Carousel</a></li><li><a href="global.html#CarouselContent">CarouselContent</a></li><li><a href="global.html#CarouselContext">CarouselContext</a></li><li><a href="global.html#CarouselItem">CarouselItem</a></li><li><a href="global.html#CarouselNext">CarouselNext</a></li><li><a href="global.html#CarouselPrevious">CarouselPrevious</a></li><li><a href="global.html#Checkbox">Checkbox</a></li><li><a href="global.html#ComputedPropertyConfig">ComputedPropertyConfig</a></li><li><a href="global.html#Configuration">Configuration</a></li><li><a href="global.html#ContextDashboard">ContextDashboard</a></li><li><a href="global.html#ContextDashboardActionItems">ContextDashboardActionItems</a></li><li><a href="global.html#ContextGrid">ContextGrid</a></li><li><a href="global.html#ContextWidgetActionItems">ContextWidgetActionItems</a></li><li><a href="global.html#ContextWidgetWrapper">ContextWidgetWrapper</a></li><li><a href="global.html#CooldownButton">CooldownButton</a></li><li><a href="global.html#DarkProvider">DarkProvider</a></li><li><a href="global.html#DashboardDateProvider">DashboardDateProvider</a></li><li><a href="global.html#DashboardModal">DashboardModal</a></li><li><a href="global.html#DashboardTabs">DashboardTabs</a></li><li><a href="global.html#DataDetail">DataDetail</a></li><li><a href="global.html#DataItem">DataItem</a></li><li><a href="global.html#DataList">DataList</a></li><li><a href="global.html#DataManager">DataManager</a></li><li><a href="global.html#DataMenu">DataMenu</a></li><li><a href="global.html#DatePicker">DatePicker</a></li><li><a href="global.html#DefaultDatePeriodSection">DefaultDatePeriodSection</a></li><li><a href="global.html#DeviceTree">DeviceTree</a></li><li><a href="global.html#Dialog">Dialog</a></li><li><a href="global.html#DialogClose">DialogClose</a></li><li><a href="global.html#DialogContent">DialogContent</a></li><li><a href="global.html#DialogDescription">DialogDescription</a></li><li><a href="global.html#DialogFooter">DialogFooter</a></li><li><a href="global.html#DialogHeader">DialogHeader</a></li><li><a href="global.html#DialogOverlay">DialogOverlay</a></li><li><a href="global.html#DialogPortal">DialogPortal</a></li><li><a href="global.html#DialogTitle">DialogTitle</a></li><li><a href="global.html#DialogTrigger">DialogTrigger</a></li><li><a href="global.html#DropdownMenu">DropdownMenu</a></li><li><a href="global.html#DropdownMenuCheckboxItem">DropdownMenuCheckboxItem</a></li><li><a href="global.html#DropdownMenuContent">DropdownMenuContent</a></li><li><a href="global.html#DropdownMenuGroup">DropdownMenuGroup</a></li><li><a href="global.html#DropdownMenuItem">DropdownMenuItem</a></li><li><a href="global.html#DropdownMenuPortal">DropdownMenuPortal</a></li><li><a href="global.html#DropdownMenuRadioGroup">DropdownMenuRadioGroup</a></li><li><a href="global.html#DropdownMenuShortcut">DropdownMenuShortcut</a></li><li><a href="global.html#DropdownMenuSub">DropdownMenuSub</a></li><li><a href="global.html#DropdownMenuTrigger">DropdownMenuTrigger</a></li><li><a href="global.html#DynamicWidget">DynamicWidget</a></li><li><a href="global.html#EditableField">EditableField</a></li><li><a href="global.html#EmptyState">EmptyState</a></li><li><a href="global.html#FallbackUi">FallbackUi</a></li><li><a href="global.html#ForgotPassword">ForgotPassword</a></li><li><a href="global.html#Form">Form</a></li><li><a href="global.html#FormCheckboxField">FormCheckboxField</a></li><li><a href="global.html#FormColorField">FormColorField</a></li><li><a href="global.html#FormField">FormField</a></li><li><a href="global.html#FormIconSelectField">FormIconSelectField</a></li><li><a href="global.html#FormInputArrayField">FormInputArrayField</a></li><li><a href="global.html#FormInputField">FormInputField</a></li><li><a href="global.html#FormItem">FormItem</a></li><li><a href="global.html#FormMessage">FormMessage</a></li><li><a href="global.html#FormRadioField">FormRadioField</a></li><li><a href="global.html#FormSelectField">FormSelectField</a></li><li><a href="global.html#FormSwitchField">FormSwitchField</a></li><li><a href="global.html#FormTextareaField">FormTextareaField</a></li><li><a href="global.html#GeneralSection">GeneralSection</a></li><li><a href="global.html#GroupAccordion">GroupAccordion</a></li><li><a href="global.html#Header">Header</a></li><li><a href="global.html#HeaderDivider">HeaderDivider</a></li><li><a href="global.html#HeaderStyleEnum">HeaderStyleEnum</a></li><li><a href="global.html#IconComponent">IconComponent</a></li><li><a href="global.html#Input">Input</a></li><li><a href="global.html#Label">Label</a></li><li><a href="global.html#LastUpdated">LastUpdated</a></li><li><a href="global.html#Layout">Layout</a></li><li><a href="global.html#LayoutSection">LayoutSection</a></li><li><a href="global.html#LazyLoader">LazyLoader</a></li><li><a href="global.html#Loader">Loader</a></li><li><a href="global.html#Loading">Loading</a></li><li><a href="global.html#LoadingDots">LoadingDots</a></li><li><a href="global.html#LoadingSpinner">LoadingSpinner</a></li><li><a href="global.html#Login">Login</a></li><li><a href="global.html#LoginForm">LoginForm</a></li><li><a href="global.html#MenuBar">MenuBar</a></li><li><a href="global.html#MultiStepForm">MultiStepForm</a></li><li><a href="global.html#NavigationMenu">NavigationMenu</a></li><li><a href="global.html#NavigationMenuContent">NavigationMenuContent</a></li><li><a href="global.html#NavigationMenuIndicator">NavigationMenuIndicator</a></li><li><a href="global.html#NavigationMenuItem">NavigationMenuItem</a></li><li><a href="global.html#NavigationMenuLink">NavigationMenuLink</a></li><li><a href="global.html#NavigationMenuList">NavigationMenuList</a></li><li><a href="global.html#NavigationMenuTrigger">NavigationMenuTrigger</a></li><li><a href="global.html#NavigationMenuViewport">NavigationMenuViewport</a></li><li><a href="global.html#NavigationTabs">NavigationTabs</a></li><li><a href="global.html#NotAuth">NotAuth</a></li><li><a href="global.html#NotFound">NotFound</a></li><li><a href="global.html#Popover">Popover</a></li><li><a href="global.html#PopoverContent">PopoverContent</a></li><li><a href="global.html#PopoverTrigger">PopoverTrigger</a></li><li><a href="global.html#PreviewSection">PreviewSection</a></li><li><a href="global.html#PreviewWidget">PreviewWidget</a></li><li><a href="global.html#PropertySelectTable">PropertySelectTable</a></li><li><a href="global.html#PropertySelector">PropertySelector</a></li><li><a href="global.html#PropertyTable">PropertyTable</a></li><li><a href="global.html#QuestionTooltip">QuestionTooltip</a></li><li><a href="global.html#RadioGroup">RadioGroup</a></li><li><a href="global.html#RadioGroupItem">RadioGroupItem</a></li><li><a href="global.html#RemoveModal">RemoveModal</a></li><li><a href="global.html#RenderEmptyStateMessage">RenderEmptyStateMessage</a></li><li><a href="global.html#RoutingProvider">RoutingProvider</a></li><li><a href="global.html#ScrollArea">ScrollArea</a></li><li><a href="global.html#ScrollBar">ScrollBar</a></li><li><a href="global.html#SearchDeviceTree">SearchDeviceTree</a></li><li><a href="global.html#Select">Select</a></li><li><a href="global.html#SelectContent">SelectContent</a></li><li><a href="global.html#SelectGroup">SelectGroup</a></li><li><a href="global.html#SelectItem">SelectItem</a></li><li><a href="global.html#SelectLabel">SelectLabel</a></li><li><a href="global.html#SelectTrigger">SelectTrigger</a></li><li><a href="global.html#SelectValue">SelectValue</a></li><li><a href="global.html#SelectWidget">SelectWidget</a></li><li><a href="global.html#Separator">Separator</a></li><li><a href="global.html#Sidebar">Sidebar</a></li><li><a href="global.html#SidebarAccordionItem">SidebarAccordionItem</a></li><li><a href="global.html#SidebarContext">SidebarContext</a></li><li><a href="global.html#SidebarItem">SidebarItem</a></li><li><a href="global.html#StaticDashboard">StaticDashboard</a></li><li><a href="global.html#StaticWidgetWrapper">StaticWidgetWrapper</a></li><li><a href="global.html#Status">Status</a></li><li><a href="global.html#StepperIndicator">StepperIndicator</a></li><li><a href="global.html#Switch">Switch</a></li><li><a href="global.html#TabItem">TabItem</a></li><li><a href="global.html#Table">Table</a></li><li><a href="global.html#TableBody">TableBody</a></li><li><a href="global.html#TableCaption">TableCaption</a></li><li><a href="global.html#TableCell">TableCell</a></li><li><a href="global.html#TableFooter">TableFooter</a></li><li><a href="global.html#TableHead">TableHead</a></li><li><a href="global.html#TableHeader">TableHeader</a></li><li><a href="global.html#TableRow">TableRow</a></li><li><a href="global.html#Tabs">Tabs</a></li><li><a href="global.html#TabsContent">TabsContent</a></li><li><a href="global.html#TabsList">TabsList</a></li><li><a href="global.html#TabsTrigger">TabsTrigger</a></li><li><a href="global.html#Textarea">Textarea</a></li><li><a href="global.html#Toast">Toast</a></li><li><a href="global.html#ToastAction">ToastAction</a></li><li><a href="global.html#ToastClose">ToastClose</a></li><li><a href="global.html#ToastDescription">ToastDescription</a></li><li><a href="global.html#ToastProvider">ToastProvider</a></li><li><a href="global.html#ToastTitle">ToastTitle</a></li><li><a href="global.html#ToastViewport">ToastViewport</a></li><li><a href="global.html#Toaster">Toaster</a></li><li><a href="global.html#Tooltip">Tooltip</a></li><li><a href="global.html#TooltipContent">TooltipContent</a></li><li><a href="global.html#TooltipProvider">TooltipProvider</a></li><li><a href="global.html#TooltipTrigger">TooltipTrigger</a></li><li><a href="global.html#TreeItem">TreeItem</a></li><li><a href="global.html#TreeParent">TreeParent</a></li><li><a href="global.html#UltivisDeviceProvider">UltivisDeviceProvider</a></li><li><a href="global.html#UserInfoForm">UserInfoForm</a></li><li><a href="global.html#UserMenu">UserMenu</a></li><li><a href="global.html#UserMenuItem">UserMenuItem</a></li><li><a href="global.html#UserSetting">UserSetting</a></li><li><a href="global.html#WidgetDatePicker">WidgetDatePicker</a></li><li><a href="global.html#WidgetModal">WidgetModal</a></li><li><a href="global.html#addAccessedDashboardId">addAccessedDashboardId</a></li><li><a href="global.html#addLanguagePack">addLanguagePack</a></li><li><a href="global.html#alarmPeriod">alarmPeriod</a></li><li><a href="global.html#badgeVariants">badgeVariants</a></li><li><a href="global.html#baseSchema">baseSchema</a></li><li><a href="global.html#buttonVariants">buttonVariants</a></li><li><a href="global.html#calculateDateRange">calculateDateRange</a></li><li><a href="global.html#chartDisplayOptions">chartDisplayOptions</a></li><li><a href="global.html#chartTypeOptions">chartTypeOptions</a></li><li><a href="global.html#checkRole">checkRole</a></li><li><a href="global.html#cn">cn</a></li><li><a href="global.html#createOperation">createOperation</a></li><li><a href="global.html#customPeriod">customPeriod</a></li><li><a href="global.html#dataMinMaxRequireSchema">dataMinMaxRequireSchema</a></li><li><a href="global.html#dataRequireSchema">dataRequireSchema</a></li><li><a href="global.html#dataSchema">dataSchema</a></li><li><a href="global.html#deviceSchema">deviceSchema</a></li><li><a href="global.html#deviceTypeDashboardForDevice">deviceTypeDashboardForDevice</a></li><li><a href="global.html#encodeAuth">encodeAuth</a></li><li><a href="global.html#eventSchema">eventSchema</a></li><li><a href="global.html#fontSchema">fontSchema</a></li><li><a href="global.html#fontWeightSchema">fontWeightSchema</a></li><li><a href="global.html#fontWeights">fontWeights</a></li><li><a href="global.html#fonts">fonts</a></li><li><a href="global.html#getActiveData">getActiveData</a></li><li><a href="global.html#getAlarms">getAlarms</a></li><li><a href="global.html#getAllInventory">getAllInventory</a></li><li><a href="global.html#getApiMap">getApiMap</a></li><li><a href="global.html#getBinary">getBinary</a></li><li><a href="global.html#getChildAssetsList">getChildAssetsList</a></li><li><a href="global.html#getChildAssetsListPaging">getChildAssetsListPaging</a></li><li><a href="global.html#getChildDevicesList">getChildDevicesList</a></li><li><a href="global.html#getComputedType">getComputedType</a></li><li><a href="global.html#getCurrentUser">getCurrentUser</a></li><li><a href="global.html#getDashboards">getDashboards</a></li><li><a href="global.html#getDataPoints">getDataPoints</a></li><li><a href="global.html#getDatapointsFromLocal">getDatapointsFromLocal</a></li><li><a href="global.html#getEvents">getEvents</a></li><li><a href="global.html#getEventsByDate">getEventsByDate</a></li><li><a href="global.html#getEventsByFragment">getEventsByFragment</a></li><li><a href="global.html#getEventsByType">getEventsByType</a></li><li><a href="global.html#getExternalId">getExternalId</a></li><li><a href="global.html#getInventory">getInventory</a></li><li><a href="global.html#getInventoryByFragmentType">getInventoryByFragmentType</a></li><li><a href="global.html#getInventoryByText">getInventoryByText</a></li><li><a href="global.html#getLoginOptions">getLoginOptions</a></li><li><a href="global.html#getMeasurements">getMeasurements</a></li><li><a href="global.html#getMeasurementsByDate">getMeasurementsByDate</a></li><li><a href="global.html#getMeasurementsByFragment">getMeasurementsByFragment</a></li><li><a href="global.html#getMeasurementsBySeries">getMeasurementsBySeries</a></li><li><a href="global.html#getSchema">getSchema</a></li><li><a href="global.html#getSupported">getSupported</a></li><li><a href="global.html#getTargetPath">getTargetPath</a></li><li><a href="global.html#getTypesFromLocal">getTypesFromLocal</a></li><li><a href="global.html#getWindowSize">getWindowSize</a></li><li><a href="global.html#hasAccessedDashboardId">hasAccessedDashboardId</a></li><li><a href="global.html#homeDeviceInventory">homeDeviceInventory</a></li><li><a href="global.html#homeGroupInventory">homeGroupInventory</a></li><li><a href="global.html#humanizeAppName">humanizeAppName</a></li><li><a href="global.html#initRoles">initRoles</a></li><li><a href="global.html#initializeState">initializeState</a></li><li><a href="global.html#intervalSchema">intervalSchema</a></li><li><a href="global.html#intervals">intervals</a></li><li><a href="global.html#isDevice">isDevice</a></li><li><a href="global.html#isSameDatapoint">isSameDatapoint</a></li><li><a href="global.html#isSameId">isSameId</a></li><li><a href="global.html#isSameType">isSameType</a></li><li><a href="global.html#list">list</a></li><li><a href="global.html#load">load</a></li><li><a href="global.html#manageRole">manageRole</a></li><li><a href="global.html#managedObjectSchema">managedObjectSchema</a></li><li><a href="global.html#measurementSchema">measurementSchema</a></li><li><a href="global.html#navigationMenuTriggerStyle">navigationMenuTriggerStyle</a></li><li><a href="global.html#period">period</a></li><li><a href="global.html#periodSchema">periodSchema</a></li><li><a href="global.html#postChildAssetToParent">postChildAssetToParent</a></li><li><a href="global.html#postChildAssets">postChildAssets</a></li><li><a href="global.html#postChildInventory">postChildInventory</a></li><li><a href="global.html#postEvents">postEvents</a></li><li><a href="global.html#postInventory">postInventory</a></li><li><a href="global.html#propertySchema">propertySchema</a></li><li><a href="global.html#putAlarm">putAlarm</a></li><li><a href="global.html#putCurrentUser">putCurrentUser</a></li><li><a href="global.html#putDataPoints">putDataPoints</a></li><li><a href="global.html#putInventory">putInventory</a></li><li><a href="global.html#putPassword">putPassword</a></li><li><a href="global.html#realtimeSub">realtimeSub</a></li><li><a href="global.html#realtimeUnSub">realtimeUnSub</a></li><li><a href="global.html#reducer">reducer</a></li><li><a href="global.html#register">register</a></li><li><a href="global.html#registerList">registerList</a></li><li><a href="global.html#removeChildAssetToParent">removeChildAssetToParent</a></li><li><a href="global.html#removeInventory">removeInventory</a></li><li><a href="global.html#resetQueryDeleteInvalidated">resetQueryDeleteInvalidated</a></li><li><a href="global.html#resetQueryInvalidated">resetQueryInvalidated</a></li><li><a href="global.html#setAccess">setAccess</a></li><li><a href="global.html#setBasicAuth">setBasicAuth</a></li><li><a href="global.html#setDatapointsToLocal">setDatapointsToLocal</a></li><li><a href="global.html#setIsDevice">setIsDevice</a></li><li><a href="global.html#setIsFullScreen">setIsFullScreen</a></li><li><a href="global.html#setTypesToLocal">setTypesToLocal</a></li><li><a href="global.html#sizeVariants">sizeVariants</a></li><li><a href="global.html#tenantSchema">tenantSchema</a></li><li><a href="global.html#textSchema">textSchema</a></li><li><a href="global.html#useApi">useApi</a></li><li><a href="global.html#useAuth">useAuth</a></li><li><a href="global.html#useBranding">useBranding</a></li><li><a href="global.html#useCarousel">useCarousel</a></li><li><a href="global.html#useCustomMutation">useCustomMutation</a></li><li><a href="global.html#useDark">useDark</a></li><li><a href="global.html#useDashboardActions">useDashboardActions</a></li><li><a href="global.html#useDashboardDate">useDashboardDate</a></li><li><a href="global.html#useDataManager">useDataManager</a></li><li><a href="global.html#useDatapointActions">useDatapointActions</a></li><li><a href="global.html#useDeviceInventory">useDeviceInventory</a></li><li><a href="global.html#useDeviceTree">useDeviceTree</a></li><li><a href="global.html#useDraftDashboard">useDraftDashboard</a></li><li><a href="global.html#useFormField">useFormField</a></li><li><a href="global.html#useInfiniteVirtualTable">useInfiniteVirtualTable</a></li><li><a href="global.html#useIntersectionObserver">useIntersectionObserver</a></li><li><a href="global.html#useInventoryContext">useInventoryContext</a></li><li><a href="global.html#useRoleStore">useRoleStore</a></li><li><a href="global.html#useRouting">useRouting</a></li><li><a href="global.html#useSidebarContext">useSidebarContext</a></li><li><a href="global.html#useSidebarStore">useSidebarStore</a></li><li><a href="global.html#useToast">useToast</a></li><li><a href="global.html#useTransitionNavigate">useTransitionNavigate</a></li><li><a href="global.html#useTranslation">useTranslation</a></li><li><a href="global.html#useUltivisDeviceContext">useUltivisDeviceContext</a></li><li><a href="global.html#useUltivisLogic">useUltivisLogic</a></li><li><a href="global.html#useUpdateForTypeDashboard">useUpdateForTypeDashboard</a></li><li><a href="global.html#useUpdatedConfig">useUpdatedConfig</a></li><li><a href="global.html#useUserAgentStore">useUserAgentStore</a></li><li><a href="global.html#useVirtualTable">useVirtualTable</a></li><li><a href="global.html#useWidgetSize">useWidgetSize</a></li><li><a href="global.html#widgetManager">widgetManager</a></li><li><a href="global.html#yAxisPositionOptions">yAxisPositionOptions</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Jan 24 2025 09:32:54 GMT+0900 (대한민국 표준시)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Tue Dec 02 2025 01:16:34 GMT+0900 (대한민국 표준시)
 </footer>
 
 <script> prettyPrint(); </script>

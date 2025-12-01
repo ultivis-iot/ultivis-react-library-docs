@@ -28,18 +28,115 @@
         <article>
             <pre class="prettyprint source linenums"><code>import { forwardRef } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { CloseIcon } from '@styles';
+import { X } from 'lucide-react';
 import { cn } from '@utils';
 import { useTranslation } from '@hooks';
 
+/**
+ * Dialog System
+ *
+ * A modal dialog system built on Radix UI primitives with customizable overlay,
+ * close button, and outside click behavior. Provides accessible modal dialogs
+ * with proper focus management and keyboard navigation.
+ *
+ * @see {@link https://www.radix-ui.com/docs/primitives/components/dialog} - Radix UI Dialog documentation
+ */
+
+/**
+ * Dialog Root Component
+ *
+ * The root container for the dialog system. Controls the open/closed state.
+ *
+ * @component
+ *
+ * @param {boolean} [open] - Controlled open state of the dialog.
+ * @param {boolean} [defaultOpen] - Default open state (uncontrolled).
+ * @param {Function} [onOpenChange] - Callback fired when open state changes.
+ * @param {boolean} [modal=true] - Whether the dialog is modal (traps focus).
+ *
+ * @example
+ * &lt;Dialog>
+ *   &lt;DialogTrigger>Open Dialog&lt;/DialogTrigger>
+ *   &lt;DialogContent>
+ *     &lt;DialogHeader>
+ *       &lt;DialogTitle>Dialog Title&lt;/DialogTitle>
+ *       &lt;DialogDescription>Dialog description&lt;/DialogDescription>
+ *     &lt;/DialogHeader>
+ *   &lt;/DialogContent>
+ * &lt;/Dialog>
+ */
 const Dialog = DialogPrimitive.Root;
 
+/**
+ * Dialog Trigger Component
+ *
+ * Button that triggers opening the dialog.
+ *
+ * @component
+ *
+ * @param {React.ReactNode} children - Trigger button content.
+ * @param {string} [className] - Additional CSS classes.
+ * @param {boolean} [asChild=false] - Merge props with child element.
+ *
+ * @example
+ * &lt;DialogTrigger asChild>
+ *   &lt;Button>Open&lt;/Button>
+ * &lt;/DialogTrigger>
+ */
 const DialogTrigger = DialogPrimitive.Trigger;
 
+/**
+ * Dialog Portal Component
+ *
+ * Renders dialog content in a portal at the end of the document body.
+ *
+ * @component
+ *
+ * @param {React.ReactNode} children - Dialog content to render in portal.
+ * @param {HTMLElement} [container] - Custom container element for the portal.
+ *
+ * @example
+ * &lt;DialogPortal>
+ *   &lt;DialogOverlay />
+ *   &lt;DialogContent>...&lt;/DialogContent>
+ * &lt;/DialogPortal>
+ */
 const DialogPortal = DialogPrimitive.Portal;
 
+/**
+ * Dialog Close Component
+ *
+ * Button that closes the dialog when clicked.
+ *
+ * @component
+ *
+ * @param {React.ReactNode} children - Close button content.
+ * @param {string} [className] - Additional CSS classes.
+ * @param {boolean} [asChild=false] - Merge props with child element.
+ *
+ * @example
+ * &lt;DialogClose asChild>
+ *   &lt;Button variant="outline">Cancel&lt;/Button>
+ * &lt;/DialogClose>
+ */
 const DialogClose = DialogPrimitive.Close;
 
+/**
+ * Dialog Overlay Component
+ *
+ * Semi-transparent backdrop overlay behind the dialog.
+ *
+ * @component
+ *
+ * @param {string} [className] - Additional CSS classes for the overlay.
+ * @param {React.Ref} ref - Forwarded ref to the overlay element.
+ * @param {Object} props - Additional props passed to the overlay.
+ *
+ * @returns {JSX.Element} Animated backdrop overlay element.
+ *
+ * @example
+ * &lt;DialogOverlay className="bg-black/80" />
+ */
 const DialogOverlay = forwardRef(({ className, ...props }, ref) => (
   &lt;DialogPrimitive.Overlay
     ref={ref}
@@ -53,11 +150,41 @@ const DialogOverlay = forwardRef(({ className, ...props }, ref) => (
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
 /**
- * @param {boolean} [props.overlay=true] - 모달 백드롭 설정 여부
- * @param {boolean} [props.closeButton=true] - 모달 헤더 오른쪽 상단에 닫기 버튼 표시 여부
- * @param {boolean} [props.disableOutsideClick=true] - 모달 외부 클릭 시 모달 닫히는지 설정 여부
+ * Dialog Content Component
  *
- * ex) disableOutsideClick 값이 true인 경우 외부 클릭 시 모달이 닫히지 않음
+ * The main content container for the dialog with optional overlay and close button.
+ * Supports customizable outside click behavior and animations.
+ *
+ * @component
+ *
+ * @param {Object} props - Component properties.
+ * @param {React.ReactNode} props.children - Dialog content.
+ * @param {string} [props.className] - Additional CSS classes for the content.
+ * @param {string} [props.overlayClassName] - Additional CSS classes for the overlay.
+ * @param {boolean} [props.overlay=true] - Whether to show the backdrop overlay.
+ * @param {boolean} [props.closeButton=true] - Whether to show the close button in the header.
+ * @param {boolean} [props.disableOutsideClick=true] - When true, clicking outside won't close the dialog.
+ * @param {React.Ref} ref - Forwarded ref to the content element.
+ *
+ * @returns {JSX.Element} The dialog content with portal, overlay, and close button.
+ *
+ * @example
+ * // Basic dialog
+ * &lt;DialogContent>
+ *   &lt;p>Dialog content here&lt;/p>
+ * &lt;/DialogContent>
+ *
+ * @example
+ * // Without overlay or close button
+ * &lt;DialogContent overlay={false} closeButton={false}>
+ *   &lt;p>Minimal dialog&lt;/p>
+ * &lt;/DialogContent>
+ *
+ * @example
+ * // Allow outside click to close
+ * &lt;DialogContent disableOutsideClick={false}>
+ *   &lt;p>Click outside to close&lt;/p>
+ * &lt;/DialogContent>
  */
 const DialogContent = forwardRef(
   (
@@ -85,7 +212,7 @@ const DialogContent = forwardRef(
             }
           }}
           className={cn(
-            'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] fixed left-[50%] top-[50%] z-50 grid w-full translate-x-[-50%] translate-y-[-50%] gap-4 bg-grayscale-1000 px-6 shadow-xl duration-200 dark:bg-dark-bg-444 sm:max-w-lg sm:rounded-2xl',
+            'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] fixed left-[50%] top-[50%] z-50 grid w-full translate-x-[-50%] translate-y-[-50%] gap-4 border border-grayscale-500 bg-grayscale-800 px-6 text-grayscale-100 shadow-xl duration-200 dark:border-dark-grayscale-500 dark:bg-dark-grayscale-900 dark:text-white sm:max-w-lg sm:rounded-2xl',
             className
           )}
           {...props}
@@ -93,7 +220,7 @@ const DialogContent = forwardRef(
           {children}
           {closeButton &amp;&amp; (
             &lt;DialogPrimitive.Close className="absolute right-4 top-6 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-              &lt;CloseIcon className="h-8 w-8" />
+              &lt;X className="h-8 w-8" />
               &lt;span className="sr-only">{t('Close')}&lt;/span>
             &lt;/DialogPrimitive.Close>
           )}
@@ -104,6 +231,25 @@ const DialogContent = forwardRef(
 );
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
+/**
+ * Dialog Header Component
+ *
+ * Container for dialog title and description with consistent spacing.
+ *
+ * @component
+ *
+ * @param {Object} props - Component properties.
+ * @param {React.ReactNode} props.children - Header content (typically DialogTitle and DialogDescription).
+ * @param {string} [props.className] - Additional CSS classes.
+ *
+ * @returns {JSX.Element} Header container element.
+ *
+ * @example
+ * &lt;DialogHeader>
+ *   &lt;DialogTitle>Confirm Action&lt;/DialogTitle>
+ *   &lt;DialogDescription>This action cannot be undone.&lt;/DialogDescription>
+ * &lt;/DialogHeader>
+ */
 const DialogHeader = ({ className, ...props }) => (
   &lt;div
     className={cn('flex flex-col space-y-1.5 sm:text-left', className)}
@@ -112,6 +258,27 @@ const DialogHeader = ({ className, ...props }) => (
 );
 DialogHeader.displayName = 'DialogHeader';
 
+/**
+ * Dialog Footer Component
+ *
+ * Container for dialog action buttons with consistent spacing and alignment.
+ *
+ * @component
+ *
+ * @param {Object} props - Component properties.
+ * @param {React.ReactNode} props.children - Footer content (typically action buttons).
+ * @param {string} [props.className] - Additional CSS classes.
+ *
+ * @returns {JSX.Element} Footer container element.
+ *
+ * @example
+ * &lt;DialogFooter>
+ *   &lt;DialogClose asChild>
+ *     &lt;Button variant="outline">Cancel&lt;/Button>
+ *   &lt;/DialogClose>
+ *   &lt;Button>Confirm&lt;/Button>
+ * &lt;/DialogFooter>
+ */
 const DialogFooter = ({ className, ...props }) => (
   &lt;div
     className={cn('flex flex-row justify-end space-x-4 pb-8 pt-6', className)}
@@ -120,6 +287,26 @@ const DialogFooter = ({ className, ...props }) => (
 );
 DialogFooter.displayName = 'DialogFooter';
 
+/**
+ * Dialog Title Component
+ *
+ * Accessible title for the dialog. Required for screen readers.
+ *
+ * @component
+ *
+ * @param {Object} props - Component properties.
+ * @param {React.ReactNode} props.children - Title text.
+ * @param {string} [props.className] - Additional CSS classes.
+ * @param {React.Ref} ref - Forwarded ref to the title element.
+ *
+ * @returns {JSX.Element} Styled heading element.
+ *
+ * @example
+ * &lt;DialogTitle>Delete Account&lt;/DialogTitle>
+ *
+ * @example
+ * &lt;DialogTitle className="text-destructive">Warning&lt;/DialogTitle>
+ */
 const DialogTitle = forwardRef(({ className, ...props }, ref) => (
   &lt;DialogPrimitive.Title
     ref={ref}
@@ -132,6 +319,30 @@ const DialogTitle = forwardRef(({ className, ...props }, ref) => (
 ));
 DialogTitle.displayName = DialogPrimitive.Title.displayName;
 
+/**
+ * Dialog Description Component
+ *
+ * Accessible description for the dialog. Provides additional context.
+ *
+ * @component
+ *
+ * @param {Object} props - Component properties.
+ * @param {React.ReactNode} props.children - Description text.
+ * @param {string} [props.className] - Additional CSS classes.
+ * @param {React.Ref} ref - Forwarded ref to the description element.
+ *
+ * @returns {JSX.Element} Styled paragraph element.
+ *
+ * @example
+ * &lt;DialogDescription>
+ *   This will permanently delete your account and all associated data.
+ * &lt;/DialogDescription>
+ *
+ * @example
+ * &lt;DialogDescription className="text-destructive">
+ *   Warning: This action cannot be undone.
+ * &lt;/DialogDescription>
+ */
 const DialogDescription = forwardRef(({ className, ...props }, ref) => (
   &lt;DialogPrimitive.Description
     ref={ref}
@@ -163,13 +374,13 @@ export {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#ActionBar">ActionBar</a></li><li><a href="global.html#ActionItem">ActionItem</a></li><li><a href="global.html#AddData">AddData</a></li><li><a href="global.html#AggregationPicker">AggregationPicker</a></li><li><a href="global.html#AppItem">AppItem</a></li><li><a href="global.html#AppProviders">AppProviders</a></li><li><a href="global.html#AppSwitcher">AppSwitcher</a></li><li><a href="global.html#AppSwitcherItem">AppSwitcherItem</a></li><li><a href="global.html#AuthProvider">AuthProvider</a></li><li><a href="global.html#ComputedPropertyConfig">ComputedPropertyConfig</a></li><li><a href="global.html#ConetextDashboardActionItems">ConetextDashboardActionItems</a></li><li><a href="global.html#Configuration">Configuration</a></li><li><a href="global.html#ContextDashboard">ContextDashboard</a></li><li><a href="global.html#ContextGrid">ContextGrid</a></li><li><a href="global.html#ContextWidgetActionItems">ContextWidgetActionItems</a></li><li><a href="global.html#ContextWidgetWrapper">ContextWidgetWrapper</a></li><li><a href="global.html#DarkProvider">DarkProvider</a></li><li><a href="global.html#DashboardModal">DashboardModal</a></li><li><a href="global.html#DataDetail">DataDetail</a></li><li><a href="global.html#DataItem">DataItem</a></li><li><a href="global.html#DataList">DataList</a></li><li><a href="global.html#DataManager">DataManager</a></li><li><a href="global.html#DataMenu">DataMenu</a></li><li><a href="global.html#DatePicker">DatePicker</a></li><li><a href="global.html#DeviceTree">DeviceTree</a></li><li><a href="global.html#DialogContent">DialogContent</a></li><li><a href="global.html#DynamicWidget">DynamicWidget</a></li><li><a href="global.html#EmptyState">EmptyState</a></li><li><a href="global.html#FallbackUi">FallbackUi</a></li><li><a href="global.html#ForgotPassword">ForgotPassword</a></li><li><a href="global.html#FormCheckboxField">FormCheckboxField</a></li><li><a href="global.html#FormColorField">FormColorField</a></li><li><a href="global.html#FormInputArrayField">FormInputArrayField</a></li><li><a href="global.html#FormInputField">FormInputField</a></li><li><a href="global.html#FormRadioField">FormRadioField</a></li><li><a href="global.html#FormSelectField">FormSelectField</a></li><li><a href="global.html#GeneralSection">GeneralSection</a></li><li><a href="global.html#GroupAccordion">GroupAccordion</a></li><li><a href="global.html#Header">Header</a></li><li><a href="global.html#HeaderDivider">HeaderDivider</a></li><li><a href="global.html#HeaderStyleEnum">HeaderStyleEnum</a></li><li><a href="global.html#LastUpdated">LastUpdated</a></li><li><a href="global.html#Layout">Layout</a></li><li><a href="global.html#LayoutSection">LayoutSection</a></li><li><a href="global.html#LazyLoader">LazyLoader</a></li><li><a href="global.html#LinkTab">LinkTab</a></li><li><a href="global.html#Loader">Loader</a></li><li><a href="global.html#Loading">Loading</a></li><li><a href="global.html#LoadingDots">LoadingDots</a></li><li><a href="global.html#LoadingSpinner">LoadingSpinner</a></li><li><a href="global.html#Login">Login</a></li><li><a href="global.html#LoginForm">LoginForm</a></li><li><a href="global.html#MenuBar">MenuBar</a></li><li><a href="global.html#NotFound">NotFound</a></li><li><a href="global.html#PreviewSection">PreviewSection</a></li><li><a href="global.html#PreviewWidget">PreviewWidget</a></li><li><a href="global.html#PropertySelectTable">PropertySelectTable</a></li><li><a href="global.html#PropertySelector">PropertySelector</a></li><li><a href="global.html#PropertyTable">PropertyTable</a></li><li><a href="global.html#QuestionTooltip">QuestionTooltip</a></li><li><a href="global.html#RemoveModal">RemoveModal</a></li><li><a href="global.html#RenderEmptyStateMessage">RenderEmptyStateMessage</a></li><li><a href="global.html#SearchDeviceTree">SearchDeviceTree</a></li><li><a href="global.html#SelectWidget">SelectWidget</a></li><li><a href="global.html#Sidebar">Sidebar</a></li><li><a href="global.html#SidebarAccordionItem">SidebarAccordionItem</a></li><li><a href="global.html#SidebarItem">SidebarItem</a></li><li><a href="global.html#StaticDashboard">StaticDashboard</a></li><li><a href="global.html#StaticWidgetWrapper">StaticWidgetWrapper</a></li><li><a href="global.html#TabItem">TabItem</a></li><li><a href="global.html#Tabs">Tabs</a></li><li><a href="global.html#Toaster">Toaster</a></li><li><a href="global.html#TreeItem">TreeItem</a></li><li><a href="global.html#TreeParent">TreeParent</a></li><li><a href="global.html#UltivisDeviceProvider">UltivisDeviceProvider</a></li><li><a href="global.html#UserMenu">UserMenu</a></li><li><a href="global.html#UserMenuItem">UserMenuItem</a></li><li><a href="global.html#WidgetDatePicker">WidgetDatePicker</a></li><li><a href="global.html#WidgetModal">WidgetModal</a></li><li><a href="global.html#addLanguagePack">addLanguagePack</a></li><li><a href="global.html#alarmPeriod">alarmPeriod</a></li><li><a href="global.html#alarmSeverityIcon">alarmSeverityIcon</a></li><li><a href="global.html#alarmStatusIcon">alarmStatusIcon</a></li><li><a href="global.html#baseSchema">baseSchema</a></li><li><a href="global.html#chartDisplayOptions">chartDisplayOptions</a></li><li><a href="global.html#chartTypeOptions">chartTypeOptions</a></li><li><a href="global.html#checkRole">checkRole</a></li><li><a href="global.html#cn">cn</a></li><li><a href="global.html#createOperation">createOperation</a></li><li><a href="global.html#customPeriod">customPeriod</a></li><li><a href="global.html#dataMinMaxRequireSchema">dataMinMaxRequireSchema</a></li><li><a href="global.html#dataRequireSchema">dataRequireSchema</a></li><li><a href="global.html#dataSchema">dataSchema</a></li><li><a href="global.html#deviceSchema">deviceSchema</a></li><li><a href="global.html#deviceTypeDashboardForDevice">deviceTypeDashboardForDevice</a></li><li><a href="global.html#deviceTypeDashboardForProperty">deviceTypeDashboardForProperty</a></li><li><a href="global.html#encodeAuth">encodeAuth</a></li><li><a href="global.html#fontSchema">fontSchema</a></li><li><a href="global.html#fontWeightSchema">fontWeightSchema</a></li><li><a href="global.html#fontWeights">fontWeights</a></li><li><a href="global.html#fonts">fonts</a></li><li><a href="global.html#getActiveData">getActiveData</a></li><li><a href="global.html#getAlarms">getAlarms</a></li><li><a href="global.html#getAllInventory">getAllInventory</a></li><li><a href="global.html#getApiMap">getApiMap</a></li><li><a href="global.html#getBinary">getBinary</a></li><li><a href="global.html#getChildAssetsList">getChildAssetsList</a></li><li><a href="global.html#getChildDevicesList">getChildDevicesList</a></li><li><a href="global.html#getComputedType">getComputedType</a></li><li><a href="global.html#getCurrentUser">getCurrentUser</a></li><li><a href="global.html#getDashboards">getDashboards</a></li><li><a href="global.html#getDataPoints">getDataPoints</a></li><li><a href="global.html#getDatapointsFromLocal">getDatapointsFromLocal</a></li><li><a href="global.html#getEvents">getEvents</a></li><li><a href="global.html#getEventsByDate">getEventsByDate</a></li><li><a href="global.html#getEventsByFragment">getEventsByFragment</a></li><li><a href="global.html#getEventsByType">getEventsByType</a></li><li><a href="global.html#getExternalId">getExternalId</a></li><li><a href="global.html#getInventory">getInventory</a></li><li><a href="global.html#getInventoryByFragmentType">getInventoryByFragmentType</a></li><li><a href="global.html#getInventoryByText">getInventoryByText</a></li><li><a href="global.html#getLoginOptions">getLoginOptions</a></li><li><a href="global.html#getMeasurements">getMeasurements</a></li><li><a href="global.html#getMeasurementsByDate">getMeasurementsByDate</a></li><li><a href="global.html#getMeasurementsByFragment">getMeasurementsByFragment</a></li><li><a href="global.html#getMeasurementsBySeries">getMeasurementsBySeries</a></li><li><a href="global.html#getSchema">getSchema</a></li><li><a href="global.html#getSupported">getSupported</a></li><li><a href="global.html#getTargetPath">getTargetPath</a></li><li><a href="global.html#getTypesFromLocal">getTypesFromLocal</a></li><li><a href="global.html#hasAccessedDashboardIdid">hasAccessedDashboardId</a></li><li><a href="global.html#homeDeviceInventory">homeDeviceInventory</a></li><li><a href="global.html#homeGroupInventory">homeGroupInventory</a></li><li><a href="global.html#humanizeAppName">humanizeAppName</a></li><li><a href="global.html#initializeState">initializeState</a></li><li><a href="global.html#intervalSchema">intervalSchema</a></li><li><a href="global.html#intervals">intervals</a></li><li><a href="global.html#isParentAssignedGroup">isParentAssignedGroup</a></li><li><a href="global.html#isSameDatapoint">isSameDatapoint</a></li><li><a href="global.html#isSameId">isSameId</a></li><li><a href="global.html#isSameType">isSameType</a></li><li><a href="global.html#list">list</a></li><li><a href="global.html#load">load</a></li><li><a href="global.html#manageRole">manageRole</a></li><li><a href="global.html#period">period</a></li><li><a href="global.html#periodSchema">periodSchema</a></li><li><a href="global.html#postChildInventory">postChildInventory</a></li><li><a href="global.html#postEvents">postEvents</a></li><li><a href="global.html#postInventory">postInventory</a></li><li><a href="global.html#propertySchema">propertySchema</a></li><li><a href="global.html#putAlarm">putAlarm</a></li><li><a href="global.html#putDataPoints">putDataPoints</a></li><li><a href="global.html#putInventory">putInventory</a></li><li><a href="global.html#realtimeSub">realtimeSub</a></li><li><a href="global.html#realtimeUnSub">realtimeUnSub</a></li><li><a href="global.html#register">register</a></li><li><a href="global.html#registerList">registerList</a></li><li><a href="global.html#removeInventory">removeInventory</a></li><li><a href="global.html#resetQueryDeleteInvalidated">resetQueryDeleteInvalidated</a></li><li><a href="global.html#resetQueryInvalidated">resetQueryInvalidated</a></li><li><a href="global.html#setBasicAuth">setBasicAuth</a></li><li><a href="global.html#setDatapointsToLocal">setDatapointsToLocal</a></li><li><a href="global.html#setIsDevice">setIsDevice</a></li><li><a href="global.html#setIsFullScreen">setIsFullScreen</a></li><li><a href="global.html#setTypesToLocal">setTypesToLocal</a></li><li><a href="global.html#textSchema">textSchema</a></li><li><a href="global.html#useApi">useApi</a></li><li><a href="global.html#useCustomMutation">useCustomMutation</a></li><li><a href="global.html#useDashboard">useDashboard</a></li><li><a href="global.html#useDashboardActions">useDashboardActions</a></li><li><a href="global.html#useDataManager">useDataManager</a></li><li><a href="global.html#useDatapointActions">useDatapointActions</a></li><li><a href="global.html#useDatePickerStore">useDatePickerStore</a></li><li><a href="global.html#useDeviceInventory">useDeviceInventory</a></li><li><a href="global.html#useDeviceTree">useDeviceTree</a></li><li><a href="global.html#useIntersectionObserver">useIntersectionObserver</a></li><li><a href="global.html#useInventoryContext">useInventoryContext</a></li><li><a href="global.html#useRoutingContext">useRoutingContext</a></li><li><a href="global.html#useSidebarStore">useSidebarStore</a></li><li><a href="global.html#useUpdateForTypeDashboard">useUpdateForTypeDashboard</a></li><li><a href="global.html#useUpdatedConfig">useUpdatedConfig</a></li><li><a href="global.html#useWidgetActions">useWidgetActions</a></li><li><a href="global.html#useWidgetSize">useWidgetSize</a></li><li><a href="global.html#yAxisPositionOptions">yAxisPositionOptions</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-@ultivis-iot_react.html">@ultivis-iot/react</a></li></ul><h3>Global</h3><ul><li><a href="global.html#Accordion">Accordion</a></li><li><a href="global.html#AccordionContent">AccordionContent</a></li><li><a href="global.html#AccordionItem">AccordionItem</a></li><li><a href="global.html#AccordionTrigger">AccordionTrigger</a></li><li><a href="global.html#ActionBar">ActionBar</a></li><li><a href="global.html#ActionItem">ActionItem</a></li><li><a href="global.html#AddData">AddData</a></li><li><a href="global.html#AggregationPicker">AggregationPicker</a></li><li><a href="global.html#AppItem">AppItem</a></li><li><a href="global.html#AppProviders">AppProviders</a></li><li><a href="global.html#AppSwitcher">AppSwitcher</a></li><li><a href="global.html#AppSwitcherItem">AppSwitcherItem</a></li><li><a href="global.html#AuthProvider">AuthProvider</a></li><li><a href="global.html#Badge">Badge</a></li><li><a href="global.html#BrandingProvider">BrandingProvider</a></li><li><a href="global.html#Button">Button</a></li><li><a href="global.html#Calendar">Calendar</a></li><li><a href="global.html#Card">Card</a></li><li><a href="global.html#CardContent">CardContent</a></li><li><a href="global.html#CardDescription">CardDescription</a></li><li><a href="global.html#CardFooter">CardFooter</a></li><li><a href="global.html#CardHeader">CardHeader</a></li><li><a href="global.html#CardTitle">CardTitle</a></li><li><a href="global.html#Carousel">Carousel</a></li><li><a href="global.html#CarouselContent">CarouselContent</a></li><li><a href="global.html#CarouselContext">CarouselContext</a></li><li><a href="global.html#CarouselItem">CarouselItem</a></li><li><a href="global.html#CarouselNext">CarouselNext</a></li><li><a href="global.html#CarouselPrevious">CarouselPrevious</a></li><li><a href="global.html#Checkbox">Checkbox</a></li><li><a href="global.html#ComputedPropertyConfig">ComputedPropertyConfig</a></li><li><a href="global.html#Configuration">Configuration</a></li><li><a href="global.html#ContextDashboard">ContextDashboard</a></li><li><a href="global.html#ContextDashboardActionItems">ContextDashboardActionItems</a></li><li><a href="global.html#ContextGrid">ContextGrid</a></li><li><a href="global.html#ContextWidgetActionItems">ContextWidgetActionItems</a></li><li><a href="global.html#ContextWidgetWrapper">ContextWidgetWrapper</a></li><li><a href="global.html#CooldownButton">CooldownButton</a></li><li><a href="global.html#DarkProvider">DarkProvider</a></li><li><a href="global.html#DashboardDateProvider">DashboardDateProvider</a></li><li><a href="global.html#DashboardModal">DashboardModal</a></li><li><a href="global.html#DashboardTabs">DashboardTabs</a></li><li><a href="global.html#DataDetail">DataDetail</a></li><li><a href="global.html#DataItem">DataItem</a></li><li><a href="global.html#DataList">DataList</a></li><li><a href="global.html#DataManager">DataManager</a></li><li><a href="global.html#DataMenu">DataMenu</a></li><li><a href="global.html#DatePicker">DatePicker</a></li><li><a href="global.html#DefaultDatePeriodSection">DefaultDatePeriodSection</a></li><li><a href="global.html#DeviceTree">DeviceTree</a></li><li><a href="global.html#Dialog">Dialog</a></li><li><a href="global.html#DialogClose">DialogClose</a></li><li><a href="global.html#DialogContent">DialogContent</a></li><li><a href="global.html#DialogDescription">DialogDescription</a></li><li><a href="global.html#DialogFooter">DialogFooter</a></li><li><a href="global.html#DialogHeader">DialogHeader</a></li><li><a href="global.html#DialogOverlay">DialogOverlay</a></li><li><a href="global.html#DialogPortal">DialogPortal</a></li><li><a href="global.html#DialogTitle">DialogTitle</a></li><li><a href="global.html#DialogTrigger">DialogTrigger</a></li><li><a href="global.html#DropdownMenu">DropdownMenu</a></li><li><a href="global.html#DropdownMenuCheckboxItem">DropdownMenuCheckboxItem</a></li><li><a href="global.html#DropdownMenuContent">DropdownMenuContent</a></li><li><a href="global.html#DropdownMenuGroup">DropdownMenuGroup</a></li><li><a href="global.html#DropdownMenuItem">DropdownMenuItem</a></li><li><a href="global.html#DropdownMenuPortal">DropdownMenuPortal</a></li><li><a href="global.html#DropdownMenuRadioGroup">DropdownMenuRadioGroup</a></li><li><a href="global.html#DropdownMenuShortcut">DropdownMenuShortcut</a></li><li><a href="global.html#DropdownMenuSub">DropdownMenuSub</a></li><li><a href="global.html#DropdownMenuTrigger">DropdownMenuTrigger</a></li><li><a href="global.html#DynamicWidget">DynamicWidget</a></li><li><a href="global.html#EditableField">EditableField</a></li><li><a href="global.html#EmptyState">EmptyState</a></li><li><a href="global.html#FallbackUi">FallbackUi</a></li><li><a href="global.html#ForgotPassword">ForgotPassword</a></li><li><a href="global.html#Form">Form</a></li><li><a href="global.html#FormCheckboxField">FormCheckboxField</a></li><li><a href="global.html#FormColorField">FormColorField</a></li><li><a href="global.html#FormField">FormField</a></li><li><a href="global.html#FormIconSelectField">FormIconSelectField</a></li><li><a href="global.html#FormInputArrayField">FormInputArrayField</a></li><li><a href="global.html#FormInputField">FormInputField</a></li><li><a href="global.html#FormItem">FormItem</a></li><li><a href="global.html#FormMessage">FormMessage</a></li><li><a href="global.html#FormRadioField">FormRadioField</a></li><li><a href="global.html#FormSelectField">FormSelectField</a></li><li><a href="global.html#FormSwitchField">FormSwitchField</a></li><li><a href="global.html#FormTextareaField">FormTextareaField</a></li><li><a href="global.html#GeneralSection">GeneralSection</a></li><li><a href="global.html#GroupAccordion">GroupAccordion</a></li><li><a href="global.html#Header">Header</a></li><li><a href="global.html#HeaderDivider">HeaderDivider</a></li><li><a href="global.html#HeaderStyleEnum">HeaderStyleEnum</a></li><li><a href="global.html#IconComponent">IconComponent</a></li><li><a href="global.html#Input">Input</a></li><li><a href="global.html#Label">Label</a></li><li><a href="global.html#LastUpdated">LastUpdated</a></li><li><a href="global.html#Layout">Layout</a></li><li><a href="global.html#LayoutSection">LayoutSection</a></li><li><a href="global.html#LazyLoader">LazyLoader</a></li><li><a href="global.html#Loader">Loader</a></li><li><a href="global.html#Loading">Loading</a></li><li><a href="global.html#LoadingDots">LoadingDots</a></li><li><a href="global.html#LoadingSpinner">LoadingSpinner</a></li><li><a href="global.html#Login">Login</a></li><li><a href="global.html#LoginForm">LoginForm</a></li><li><a href="global.html#MenuBar">MenuBar</a></li><li><a href="global.html#MultiStepForm">MultiStepForm</a></li><li><a href="global.html#NavigationMenu">NavigationMenu</a></li><li><a href="global.html#NavigationMenuContent">NavigationMenuContent</a></li><li><a href="global.html#NavigationMenuIndicator">NavigationMenuIndicator</a></li><li><a href="global.html#NavigationMenuItem">NavigationMenuItem</a></li><li><a href="global.html#NavigationMenuLink">NavigationMenuLink</a></li><li><a href="global.html#NavigationMenuList">NavigationMenuList</a></li><li><a href="global.html#NavigationMenuTrigger">NavigationMenuTrigger</a></li><li><a href="global.html#NavigationMenuViewport">NavigationMenuViewport</a></li><li><a href="global.html#NavigationTabs">NavigationTabs</a></li><li><a href="global.html#NotAuth">NotAuth</a></li><li><a href="global.html#NotFound">NotFound</a></li><li><a href="global.html#Popover">Popover</a></li><li><a href="global.html#PopoverContent">PopoverContent</a></li><li><a href="global.html#PopoverTrigger">PopoverTrigger</a></li><li><a href="global.html#PreviewSection">PreviewSection</a></li><li><a href="global.html#PreviewWidget">PreviewWidget</a></li><li><a href="global.html#PropertySelectTable">PropertySelectTable</a></li><li><a href="global.html#PropertySelector">PropertySelector</a></li><li><a href="global.html#PropertyTable">PropertyTable</a></li><li><a href="global.html#QuestionTooltip">QuestionTooltip</a></li><li><a href="global.html#RadioGroup">RadioGroup</a></li><li><a href="global.html#RadioGroupItem">RadioGroupItem</a></li><li><a href="global.html#RemoveModal">RemoveModal</a></li><li><a href="global.html#RenderEmptyStateMessage">RenderEmptyStateMessage</a></li><li><a href="global.html#RoutingProvider">RoutingProvider</a></li><li><a href="global.html#ScrollArea">ScrollArea</a></li><li><a href="global.html#ScrollBar">ScrollBar</a></li><li><a href="global.html#SearchDeviceTree">SearchDeviceTree</a></li><li><a href="global.html#Select">Select</a></li><li><a href="global.html#SelectContent">SelectContent</a></li><li><a href="global.html#SelectGroup">SelectGroup</a></li><li><a href="global.html#SelectItem">SelectItem</a></li><li><a href="global.html#SelectLabel">SelectLabel</a></li><li><a href="global.html#SelectTrigger">SelectTrigger</a></li><li><a href="global.html#SelectValue">SelectValue</a></li><li><a href="global.html#SelectWidget">SelectWidget</a></li><li><a href="global.html#Separator">Separator</a></li><li><a href="global.html#Sidebar">Sidebar</a></li><li><a href="global.html#SidebarAccordionItem">SidebarAccordionItem</a></li><li><a href="global.html#SidebarContext">SidebarContext</a></li><li><a href="global.html#SidebarItem">SidebarItem</a></li><li><a href="global.html#StaticDashboard">StaticDashboard</a></li><li><a href="global.html#StaticWidgetWrapper">StaticWidgetWrapper</a></li><li><a href="global.html#Status">Status</a></li><li><a href="global.html#StepperIndicator">StepperIndicator</a></li><li><a href="global.html#Switch">Switch</a></li><li><a href="global.html#TabItem">TabItem</a></li><li><a href="global.html#Table">Table</a></li><li><a href="global.html#TableBody">TableBody</a></li><li><a href="global.html#TableCaption">TableCaption</a></li><li><a href="global.html#TableCell">TableCell</a></li><li><a href="global.html#TableFooter">TableFooter</a></li><li><a href="global.html#TableHead">TableHead</a></li><li><a href="global.html#TableHeader">TableHeader</a></li><li><a href="global.html#TableRow">TableRow</a></li><li><a href="global.html#Tabs">Tabs</a></li><li><a href="global.html#TabsContent">TabsContent</a></li><li><a href="global.html#TabsList">TabsList</a></li><li><a href="global.html#TabsTrigger">TabsTrigger</a></li><li><a href="global.html#Textarea">Textarea</a></li><li><a href="global.html#Toast">Toast</a></li><li><a href="global.html#ToastAction">ToastAction</a></li><li><a href="global.html#ToastClose">ToastClose</a></li><li><a href="global.html#ToastDescription">ToastDescription</a></li><li><a href="global.html#ToastProvider">ToastProvider</a></li><li><a href="global.html#ToastTitle">ToastTitle</a></li><li><a href="global.html#ToastViewport">ToastViewport</a></li><li><a href="global.html#Toaster">Toaster</a></li><li><a href="global.html#Tooltip">Tooltip</a></li><li><a href="global.html#TooltipContent">TooltipContent</a></li><li><a href="global.html#TooltipProvider">TooltipProvider</a></li><li><a href="global.html#TooltipTrigger">TooltipTrigger</a></li><li><a href="global.html#TreeItem">TreeItem</a></li><li><a href="global.html#TreeParent">TreeParent</a></li><li><a href="global.html#UltivisDeviceProvider">UltivisDeviceProvider</a></li><li><a href="global.html#UserInfoForm">UserInfoForm</a></li><li><a href="global.html#UserMenu">UserMenu</a></li><li><a href="global.html#UserMenuItem">UserMenuItem</a></li><li><a href="global.html#UserSetting">UserSetting</a></li><li><a href="global.html#WidgetDatePicker">WidgetDatePicker</a></li><li><a href="global.html#WidgetModal">WidgetModal</a></li><li><a href="global.html#addAccessedDashboardId">addAccessedDashboardId</a></li><li><a href="global.html#addLanguagePack">addLanguagePack</a></li><li><a href="global.html#alarmPeriod">alarmPeriod</a></li><li><a href="global.html#badgeVariants">badgeVariants</a></li><li><a href="global.html#baseSchema">baseSchema</a></li><li><a href="global.html#buttonVariants">buttonVariants</a></li><li><a href="global.html#calculateDateRange">calculateDateRange</a></li><li><a href="global.html#chartDisplayOptions">chartDisplayOptions</a></li><li><a href="global.html#chartTypeOptions">chartTypeOptions</a></li><li><a href="global.html#checkRole">checkRole</a></li><li><a href="global.html#cn">cn</a></li><li><a href="global.html#createOperation">createOperation</a></li><li><a href="global.html#customPeriod">customPeriod</a></li><li><a href="global.html#dataMinMaxRequireSchema">dataMinMaxRequireSchema</a></li><li><a href="global.html#dataRequireSchema">dataRequireSchema</a></li><li><a href="global.html#dataSchema">dataSchema</a></li><li><a href="global.html#deviceSchema">deviceSchema</a></li><li><a href="global.html#deviceTypeDashboardForDevice">deviceTypeDashboardForDevice</a></li><li><a href="global.html#encodeAuth">encodeAuth</a></li><li><a href="global.html#eventSchema">eventSchema</a></li><li><a href="global.html#fontSchema">fontSchema</a></li><li><a href="global.html#fontWeightSchema">fontWeightSchema</a></li><li><a href="global.html#fontWeights">fontWeights</a></li><li><a href="global.html#fonts">fonts</a></li><li><a href="global.html#getActiveData">getActiveData</a></li><li><a href="global.html#getAlarms">getAlarms</a></li><li><a href="global.html#getAllInventory">getAllInventory</a></li><li><a href="global.html#getApiMap">getApiMap</a></li><li><a href="global.html#getBinary">getBinary</a></li><li><a href="global.html#getChildAssetsList">getChildAssetsList</a></li><li><a href="global.html#getChildAssetsListPaging">getChildAssetsListPaging</a></li><li><a href="global.html#getChildDevicesList">getChildDevicesList</a></li><li><a href="global.html#getComputedType">getComputedType</a></li><li><a href="global.html#getCurrentUser">getCurrentUser</a></li><li><a href="global.html#getDashboards">getDashboards</a></li><li><a href="global.html#getDataPoints">getDataPoints</a></li><li><a href="global.html#getDatapointsFromLocal">getDatapointsFromLocal</a></li><li><a href="global.html#getEvents">getEvents</a></li><li><a href="global.html#getEventsByDate">getEventsByDate</a></li><li><a href="global.html#getEventsByFragment">getEventsByFragment</a></li><li><a href="global.html#getEventsByType">getEventsByType</a></li><li><a href="global.html#getExternalId">getExternalId</a></li><li><a href="global.html#getInventory">getInventory</a></li><li><a href="global.html#getInventoryByFragmentType">getInventoryByFragmentType</a></li><li><a href="global.html#getInventoryByText">getInventoryByText</a></li><li><a href="global.html#getLoginOptions">getLoginOptions</a></li><li><a href="global.html#getMeasurements">getMeasurements</a></li><li><a href="global.html#getMeasurementsByDate">getMeasurementsByDate</a></li><li><a href="global.html#getMeasurementsByFragment">getMeasurementsByFragment</a></li><li><a href="global.html#getMeasurementsBySeries">getMeasurementsBySeries</a></li><li><a href="global.html#getSchema">getSchema</a></li><li><a href="global.html#getSupported">getSupported</a></li><li><a href="global.html#getTargetPath">getTargetPath</a></li><li><a href="global.html#getTypesFromLocal">getTypesFromLocal</a></li><li><a href="global.html#getWindowSize">getWindowSize</a></li><li><a href="global.html#hasAccessedDashboardId">hasAccessedDashboardId</a></li><li><a href="global.html#homeDeviceInventory">homeDeviceInventory</a></li><li><a href="global.html#homeGroupInventory">homeGroupInventory</a></li><li><a href="global.html#humanizeAppName">humanizeAppName</a></li><li><a href="global.html#initRoles">initRoles</a></li><li><a href="global.html#initializeState">initializeState</a></li><li><a href="global.html#intervalSchema">intervalSchema</a></li><li><a href="global.html#intervals">intervals</a></li><li><a href="global.html#isDevice">isDevice</a></li><li><a href="global.html#isSameDatapoint">isSameDatapoint</a></li><li><a href="global.html#isSameId">isSameId</a></li><li><a href="global.html#isSameType">isSameType</a></li><li><a href="global.html#list">list</a></li><li><a href="global.html#load">load</a></li><li><a href="global.html#manageRole">manageRole</a></li><li><a href="global.html#managedObjectSchema">managedObjectSchema</a></li><li><a href="global.html#measurementSchema">measurementSchema</a></li><li><a href="global.html#navigationMenuTriggerStyle">navigationMenuTriggerStyle</a></li><li><a href="global.html#period">period</a></li><li><a href="global.html#periodSchema">periodSchema</a></li><li><a href="global.html#postChildAssetToParent">postChildAssetToParent</a></li><li><a href="global.html#postChildAssets">postChildAssets</a></li><li><a href="global.html#postChildInventory">postChildInventory</a></li><li><a href="global.html#postEvents">postEvents</a></li><li><a href="global.html#postInventory">postInventory</a></li><li><a href="global.html#propertySchema">propertySchema</a></li><li><a href="global.html#putAlarm">putAlarm</a></li><li><a href="global.html#putCurrentUser">putCurrentUser</a></li><li><a href="global.html#putDataPoints">putDataPoints</a></li><li><a href="global.html#putInventory">putInventory</a></li><li><a href="global.html#putPassword">putPassword</a></li><li><a href="global.html#realtimeSub">realtimeSub</a></li><li><a href="global.html#realtimeUnSub">realtimeUnSub</a></li><li><a href="global.html#reducer">reducer</a></li><li><a href="global.html#register">register</a></li><li><a href="global.html#registerList">registerList</a></li><li><a href="global.html#removeChildAssetToParent">removeChildAssetToParent</a></li><li><a href="global.html#removeInventory">removeInventory</a></li><li><a href="global.html#resetQueryDeleteInvalidated">resetQueryDeleteInvalidated</a></li><li><a href="global.html#resetQueryInvalidated">resetQueryInvalidated</a></li><li><a href="global.html#setAccess">setAccess</a></li><li><a href="global.html#setBasicAuth">setBasicAuth</a></li><li><a href="global.html#setDatapointsToLocal">setDatapointsToLocal</a></li><li><a href="global.html#setIsDevice">setIsDevice</a></li><li><a href="global.html#setIsFullScreen">setIsFullScreen</a></li><li><a href="global.html#setTypesToLocal">setTypesToLocal</a></li><li><a href="global.html#sizeVariants">sizeVariants</a></li><li><a href="global.html#tenantSchema">tenantSchema</a></li><li><a href="global.html#textSchema">textSchema</a></li><li><a href="global.html#useApi">useApi</a></li><li><a href="global.html#useAuth">useAuth</a></li><li><a href="global.html#useBranding">useBranding</a></li><li><a href="global.html#useCarousel">useCarousel</a></li><li><a href="global.html#useCustomMutation">useCustomMutation</a></li><li><a href="global.html#useDark">useDark</a></li><li><a href="global.html#useDashboardActions">useDashboardActions</a></li><li><a href="global.html#useDashboardDate">useDashboardDate</a></li><li><a href="global.html#useDataManager">useDataManager</a></li><li><a href="global.html#useDatapointActions">useDatapointActions</a></li><li><a href="global.html#useDeviceInventory">useDeviceInventory</a></li><li><a href="global.html#useDeviceTree">useDeviceTree</a></li><li><a href="global.html#useDraftDashboard">useDraftDashboard</a></li><li><a href="global.html#useFormField">useFormField</a></li><li><a href="global.html#useInfiniteVirtualTable">useInfiniteVirtualTable</a></li><li><a href="global.html#useIntersectionObserver">useIntersectionObserver</a></li><li><a href="global.html#useInventoryContext">useInventoryContext</a></li><li><a href="global.html#useRoleStore">useRoleStore</a></li><li><a href="global.html#useRouting">useRouting</a></li><li><a href="global.html#useSidebarContext">useSidebarContext</a></li><li><a href="global.html#useSidebarStore">useSidebarStore</a></li><li><a href="global.html#useToast">useToast</a></li><li><a href="global.html#useTransitionNavigate">useTransitionNavigate</a></li><li><a href="global.html#useTranslation">useTranslation</a></li><li><a href="global.html#useUltivisDeviceContext">useUltivisDeviceContext</a></li><li><a href="global.html#useUltivisLogic">useUltivisLogic</a></li><li><a href="global.html#useUpdateForTypeDashboard">useUpdateForTypeDashboard</a></li><li><a href="global.html#useUpdatedConfig">useUpdatedConfig</a></li><li><a href="global.html#useUserAgentStore">useUserAgentStore</a></li><li><a href="global.html#useVirtualTable">useVirtualTable</a></li><li><a href="global.html#useWidgetSize">useWidgetSize</a></li><li><a href="global.html#widgetManager">widgetManager</a></li><li><a href="global.html#yAxisPositionOptions">yAxisPositionOptions</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Fri Jan 24 2025 09:32:54 GMT+0900 (대한민국 표준시)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Tue Dec 02 2025 01:16:34 GMT+0900 (대한민국 표준시)
 </footer>
 
 <script> prettyPrint(); </script>
