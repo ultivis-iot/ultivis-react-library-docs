@@ -50,13 +50,13 @@
 yarn add @ultivis-iot/react
 </code></pre>
 <h2>🚀 Quick Start</h2>
-<h3>1. Setup AppProviders</h3>
+<h3>1. AppProviders Setup (c8y Project)</h3>
 <pre class="prettyprint source lang-jsx"><code>import { AppProviders } from '@ultivis-iot/react';
 import { createBrowserRouter } from 'react-router-dom';
 import '@ultivis-iot/react/styles';
 
 const router = createBrowserRouter([
-  // your routes
+  // Route configuration
 ]);
 
 function App() {
@@ -66,14 +66,63 @@ function App() {
       favicon=&quot;/favicon.ico&quot;
       brandLogo=&quot;/logo.png&quot;
       navLogo=&quot;/nav-logo.png&quot;
-      login={true}
     />
   );
 }
 
 export default App;
 </code></pre>
-<h3>2. Using Layout</h3>
+<h3>2. Non-c8y Project Setup</h3>
+<p>For use in non-c8y environments:</p>
+<pre class="prettyprint source lang-jsx"><code>import { useState, useEffect } from 'react';
+import { AppProviders, Login } from '@ultivis-iot/react';
+import '@ultivis-iot/react/styles';
+
+// Custom API implementation
+const dashboardApi = {
+  getDashboard: async (id) => {
+    /* ... */
+  },
+  createDashboard: async (dashboard) => {
+    /* ... */
+  },
+  updateDashboard: async (id, dashboard) => {
+    /* ... */
+  },
+  deleteDashboard: async (id) => {
+    /* ... */
+  },
+};
+
+const userApi = {
+  putCurrentUser: async (body) => {
+    /* ... */
+  },
+  putPassword: async (newPassword, currentPassword) => {
+    /* ... */
+  },
+};
+
+function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  if (!isAuthenticated) {
+    return &lt;Login onLogin={handleLogin} />;
+  }
+
+  return (
+    &lt;AppProviders
+      router={router}
+      c8yAuth={false}
+      apis={{
+        dashboard: dashboardApi, // For DynamicDashboard (optional)
+        user: userApi, // For UserSetting (optional)
+      }}
+    />
+  );
+}
+</code></pre>
+<h3>3. Layout Usage</h3>
 <pre class="prettyprint source lang-jsx"><code>import { Layout } from '@ultivis-iot/react';
 
 function MyPage() {
@@ -102,289 +151,268 @@ function MyPage() {
 <h2>📦 Components</h2>
 <h3>Layout</h3>
 <ul>
-<li><a href="./global.html#Layout"><code>Layout</code></a> - Main layout component (header, sidebar, content area)</li>
-<li><a href="./global.html#Header"><code>Header</code></a> - Application header
+<li><code>Layout</code> - Main layout component (header, sidebar, content area)</li>
+<li><code>Header</code> - Application header
 <ul>
-<li><a href="./global.html#AppSwitcher"><code>AppSwitcher</code></a> - Application switcher</li>
-<li><a href="./global.html#AppSwitcherItem"><code>AppSwitcherItem</code></a> - App switcher item</li>
-<li><a href="./global.html#UserMenu"><code>UserMenu</code></a> - User menu</li>
-<li><a href="./global.html#UserMenuItem"><code>UserMenuItem</code></a> - User menu item</li>
-<li><a href="./global.html#HeaderDivider"><code>HeaderDivider</code></a> - Header divider</li>
+<li><code>AppSwitcher</code> - App switcher</li>
+<li><code>AppSwitcherItem</code> - App switch item</li>
+<li><code>UserMenu</code> - User menu</li>
+<li><code>UserMenuItem</code> - User menu item</li>
+<li><code>HeaderDivider</code> - Header divider</li>
 </ul>
 </li>
-<li><a href="./global.html#Sidebar"><code>Sidebar</code></a> - Sidebar navigation
+<li><code>Sidebar</code> - Sidebar navigation
 <ul>
-<li><a href="./global.html#SidebarItem"><code>SidebarItem</code></a> - Sidebar menu item</li>
-<li><a href="./global.html#GroupAccordion"><code>GroupAccordion</code></a> - Group accordion</li>
-<li><a href="./global.html#SidebarAccordionItem"><code>SidebarAccordionItem</code></a> - Sidebar accordion item</li>
+<li><code>SidebarItem</code> - Sidebar menu item</li>
+<li><code>GroupAccordion</code> - Group accordion</li>
+<li><code>SidebarAccordionItem</code> - Sidebar accordion item</li>
 </ul>
 </li>
-<li><a href="./global.html#MenuBar"><code>MenuBar</code></a> - Menu bar
+<li><code>MenuBar</code> - Menu bar
 <ul>
-<li><a href="./global.html#ActionBar"><code>ActionBar</code></a> - Action bar</li>
-<li><a href="./global.html#ActionItem"><code>ActionItem</code></a> - Action item</li>
-<li><a href="./global.html#TabItem"><code>TabItem</code></a> - Tab item</li>
+<li><code>ActionItem</code> - Action item</li>
+<li><code>TabItem</code> - Tab item</li>
 </ul>
 </li>
 </ul>
 <h3>Form Fields</h3>
 <ul>
-<li><a href="./global.html#FormInputField"><code>FormInputField</code></a> - Text input field</li>
-<li><a href="./global.html#FormSelectField"><code>FormSelectField</code></a> - Select field</li>
-<li><a href="./global.html#FormCheckboxField"><code>FormCheckboxField</code></a> - Checkbox field</li>
-<li><a href="./global.html#FormSwitchField"><code>FormSwitchField</code></a> - Switch field</li>
-<li><a href="./global.html#FormRadioField"><code>FormRadioField</code></a> - Radio button field</li>
-<li><a href="./global.html#FormTextareaField"><code>FormTextareaField</code></a> - Textarea field</li>
-<li><a href="./global.html#FormColorField"><code>FormColorField</code></a> - Color picker field</li>
-<li><a href="./global.html#FormIconSelectField"><code>FormIconSelectField</code></a> - Icon select field</li>
-<li><a href="./global.html#FormInputArrayField"><code>FormInputArrayField</code></a> - Array input field</li>
-<li><a href="./global.html#EditableField"><code>EditableField</code></a> - Editable field</li>
+<li><code>FormInputField</code> - Text input field</li>
+<li><code>FormSelectField</code> - Select field</li>
+<li><code>FormCheckboxField</code> - Checkbox field</li>
+<li><code>FormSwitchField</code> - Switch field</li>
+<li><code>FormRadioField</code> - Radio button field</li>
+<li><code>FormTextareaField</code> - Textarea field</li>
+<li><code>FormColorField</code> - Color picker field</li>
+<li><code>FormIconSelectField</code> - Icon select field</li>
+<li><code>FormInputArrayField</code> - Array input field</li>
+<li><code>EditableField</code> - Editable field</li>
 </ul>
 <h3>Dashboard</h3>
 <ul>
-<li><a href="./global.html#ContextDashboard"><code>ContextDashboard</code></a> - Dynamic context dashboard</li>
-<li><a href="./global.html#StaticDashboard"><code>StaticDashboard</code></a> - Static dashboard</li>
-<li><a href="./global.html#DashboardTabs"><code>DashboardTabs</code></a> - Dashboard tabs</li>
-<li>Dashboard Modals
+<li><code>ContextDashboard</code> - Dynamic context dashboard</li>
+<li><code>StaticDashboard</code> - Static dashboard</li>
+<li><code>DashboardTabs</code> - Dashboard tabs</li>
+<li>Dashboard modals
 <ul>
-<li><a href="./global.html#DashboardModal"><code>DashboardModal</code></a> - Dashboard settings modal</li>
-<li><a href="./global.html#WidgetModal"><code>WidgetModal</code></a> - Widget settings modal</li>
-<li><a href="./global.html#SelectWidget"><code>SelectWidget</code></a> - Widget selector</li>
-<li><a href="./global.html#Configuration"><code>Configuration</code></a> - Widget configuration</li>
-<li><a href="./global.html#PreviewWidget"><code>PreviewWidget</code></a> - Widget preview</li>
-<li><a href="./global.html#RemoveModal"><code>RemoveModal</code></a> - Delete confirmation modal</li>
+<li><code>DashboardModal</code> - Dashboard settings modal</li>
+<li><code>WidgetModal</code> - Widget settings modal</li>
+<li><code>SelectWidget</code> - Widget selection</li>
+<li><code>Configuration</code> - Widget configuration</li>
+<li><code>PreviewWidget</code> - Widget preview</li>
+<li><code>RemoveModal</code> - Delete confirmation modal</li>
 </ul>
 </li>
 </ul>
 <h3>Data Management</h3>
 <ul>
-<li><a href="./global.html#DataManager"><code>DataManager</code></a> - Datapoint management
-<ul>
-<li><a href="./global.html#DataList"><code>DataList</code></a> - Data list</li>
-<li><a href="./global.html#DataItem"><code>DataItem</code></a> - Data item</li>
-<li><a href="./global.html#DataDetail"><code>DataDetail</code></a> - Data detail</li>
-<li><a href="./global.html#DataMenu"><code>DataMenu</code></a> - Data menu</li>
-<li><a href="./global.html#AddData"><code>AddData</code></a> - Add data</li>
-</ul>
-</li>
-<li><a href="./global.html#DeviceTree"><code>DeviceTree</code></a> - Device tree
-<ul>
-<li><a href="./global.html#SearchDeviceTree"><code>SearchDeviceTree</code></a> - Searchable device tree</li>
-<li><a href="./global.html#TreeItem"><code>TreeItem</code></a> - Tree item</li>
-<li><a href="./global.html#TreeParent"><code>TreeParent</code></a> - Tree parent node</li>
-</ul>
-</li>
-<li><a href="./global.html#PropertySelector"><code>PropertySelector</code></a> - Property selector
-<ul>
-<li><a href="./global.html#PropertyTable"><code>PropertyTable</code></a> - Property table</li>
-<li><a href="./global.html#PropertySelectTable"><code>PropertySelectTable</code></a> - Property select table</li>
-<li><a href="./global.html#ComputedPropertyConfig"><code>ComputedPropertyConfig</code></a> - Computed property configuration</li>
-</ul>
-</li>
+<li><code>DataManager</code> - Datapoint management</li>
+<li><code>DeviceTree</code> - Device tree</li>
+<li><code>SearchDeviceTree</code> - Searchable device tree</li>
+<li><code>PropertySelector</code> - Property selector</li>
+<li><code>ComputedPropertyConfig</code> - Computed property configuration</li>
+<li><code>VirtualTable</code> - Virtual scroll table</li>
+<li><code>ExpandableCell</code> - Expandable table cell</li>
 </ul>
 <h3>Date &amp; Time</h3>
 <ul>
-<li><a href="./global.html#DatePicker"><code>DatePicker</code></a> - Date picker
-<ul>
-<li><a href="./global.html#AggregationPicker"><code>AggregationPicker</code></a> - Aggregation picker</li>
-<li><a href="./global.html#WidgetDatePicker"><code>WidgetDatePicker</code></a> - Widget date picker</li>
-</ul>
-</li>
+<li><code>DatePicker</code> - Date picker</li>
+<li><code>WidgetDatePicker</code> - Widget date picker</li>
 </ul>
 <h3>UI Components (Radix UI)</h3>
 <ul>
 <li><strong>Button</strong>
 <ul>
-<li><a href="./global.html#Button"><code>Button</code></a> - Button component</li>
-<li><a href="./global.html#buttonVariants"><code>buttonVariants</code></a> - Button style variants</li>
+<li><code>Button</code> - Button component</li>
+<li><code>buttonVariants</code> - Button style variants</li>
+</ul>
+</li>
+<li><strong>Sheet</strong>
+<ul>
+<li><code>Sheet</code>, <code>SheetTrigger</code>, <code>SheetContent</code>, <code>SheetClose</code></li>
+<li><code>SheetHeader</code>, <code>SheetTitle</code>, <code>SheetDescription</code></li>
+<li><code>SheetFooter</code>, <code>SheetPortal</code>, <code>SheetOverlay</code></li>
 </ul>
 </li>
 <li><strong>Dialog</strong>
 <ul>
-<li><a href="./global.html#Dialog"><code>Dialog</code></a>, <a href="./global.html#DialogTrigger"><code>DialogTrigger</code></a>, <a href="./global.html#DialogContent"><code>DialogContent</code></a></li>
-<li><a href="./global.html#DialogHeader"><code>DialogHeader</code></a>, <a href="./global.html#DialogTitle"><code>DialogTitle</code></a>, <a href="./global.html#DialogDescription"><code>DialogDescription</code></a></li>
-<li><a href="./global.html#DialogFooter"><code>DialogFooter</code></a>, <a href="./global.html#DialogClose"><code>DialogClose</code></a></li>
-<li><a href="./global.html#DialogOverlay"><code>DialogOverlay</code></a>, <a href="./global.html#DialogPortal"><code>DialogPortal</code></a></li>
+<li><code>Dialog</code>, <code>DialogTrigger</code>, <code>DialogContent</code></li>
+<li><code>DialogHeader</code>, <code>DialogTitle</code>, <code>DialogDescription</code></li>
+<li><code>DialogFooter</code>, <code>DialogClose</code></li>
+<li><code>DialogOverlay</code>, <code>DialogPortal</code></li>
 </ul>
 </li>
 <li><strong>Dropdown Menu</strong>
 <ul>
-<li><a href="./global.html#DropdownMenu"><code>DropdownMenu</code></a>, <a href="./global.html#DropdownMenuTrigger"><code>DropdownMenuTrigger</code></a>, <a href="./global.html#DropdownMenuContent"><code>DropdownMenuContent</code></a></li>
-<li><a href="./global.html#DropdownMenuItem"><code>DropdownMenuItem</code></a>, <a href="./global.html#DropdownMenuCheckboxItem"><code>DropdownMenuCheckboxItem</code></a>,</li>
-<li><a href="./global.html#DropdownMenuShortcut"><code>DropdownMenuShortcut</code></a></li>
-<li><a href="./global.html#DropdownMenuGroup"><code>DropdownMenuGroup</code></a>, <a href="./global.html#DropdownMenuPortal"><code>DropdownMenuPortal</code></a>, <a href="./global.html#DropdownMenuSub"><code>DropdownMenuSub</code></a></li>
-<li><a href="./global.html#DropdownMenuRadioGroup"><code>DropdownMenuRadioGroup</code></a></li>
+<li><code>DropdownMenu</code>, <code>DropdownMenuTrigger</code>, <code>DropdownMenuContent</code></li>
+<li><code>DropdownMenuItem</code>, <code>DropdownMenuCheckboxItem</code></li>
+<li><code>DropdownMenuShortcut</code></li>
+<li><code>DropdownMenuGroup</code>, <code>DropdownMenuPortal</code>, <code>DropdownMenuSub</code></li>
+<li><code>DropdownMenuRadioGroup</code></li>
 </ul>
 </li>
 <li><strong>Form</strong>
 <ul>
-<li><a href="./global.html#Form"><code>Form</code></a>, <a href="./global.html#FormItem"><code>FormItem</code></a></li>
-<li><a href="./global.html#FormMessage"><code>FormMessage</code></a>, <a href="./global.html#FormField"><code>FormField</code></a></li>
+<li><code>Form</code>, <code>FormItem</code></li>
+<li><code>FormMessage</code>, <code>FormField</code></li>
 </ul>
 </li>
 <li><strong>Select</strong>
 <ul>
-<li><a href="./global.html#Select"><code>Select</code></a>, <a href="./global.html#SelectTrigger"><code>SelectTrigger</code></a>, <a href="./global.html#SelectValue"><code>SelectValue</code></a>, <a href="./global.html#SelectContent"><code>SelectContent</code></a></li>
-<li><a href="./global.html#SelectItem"><code>SelectItem</code></a>, <a href="./global.html#SelectGroup"><code>SelectGroup</code></a>, <a href="./global.html#SelectLabel"><code>SelectLabel</code></a></li>
+<li><code>Select</code>, <code>SelectTrigger</code>, <code>SelectValue</code>, <code>SelectContent</code></li>
+<li><code>SelectItem</code>, <code>SelectGroup</code>, <code>SelectLabel</code></li>
 </ul>
 </li>
 <li><strong>Table</strong>
 <ul>
-<li><a href="./global.html#Table"><code>Table</code></a>, <a href="./global.html#TableHeader"><code>TableHeader</code></a>, <a href="./global.html#TableBody"><code>TableBody</code></a>, <a href="./global.html#TableFooter"><code>TableFooter</code></a></li>
-<li><a href="./global.html#TableRow"><code>TableRow</code></a>, <a href="./global.html#TableHead"><code>TableHead</code></a>, <a href="./global.html#TableCell"><code>TableCell</code></a>, <a href="./global.html#TableCaption"><code>TableCaption</code></a></li>
+<li><code>Table</code>, <code>TableHeader</code>, <code>TableBody</code>, <code>TableFooter</code></li>
+<li><code>TableRow</code>, <code>TableHead</code>, <code>TableCell</code>, <code>TableCaption</code></li>
 </ul>
 </li>
 <li><strong>Tabs</strong>
 <ul>
-<li><a href="./global.html#Tabs"><code>Tabs</code></a>, <a href="./global.html#TabsList"><code>TabsList</code></a>, <a href="./global.html#TabsTrigger"><code>TabsTrigger</code></a>, <a href="./global.html#TabsContent"><code>TabsContent</code></a></li>
+<li><code>Tabs</code>, <code>TabsList</code>, <code>TabsTrigger</code>, <code>TabsContent</code></li>
 </ul>
 </li>
 <li><strong>Card</strong>
 <ul>
-<li><a href="./global.html#Card"><code>Card</code></a>, <a href="./global.html#CardHeader"><code>CardHeader</code></a>, <a href="./global.html#CardTitle"><code>CardTitle</code></a>, <a href="./global.html#CardDescription"><code>CardDescription</code></a></li>
-<li><a href="./global.html#CardContent"><code>CardContent</code></a>, <a href="./global.html#CardFooter"><code>CardFooter</code></a></li>
+<li><code>Card</code>, <code>CardHeader</code>, <code>CardTitle</code>, <code>CardDescription</code></li>
+<li><code>CardContent</code>, <code>CardFooter</code></li>
 </ul>
 </li>
 <li><strong>Accordion</strong>
 <ul>
-<li><a href="./global.html#Accordion"><code>Accordion</code></a>, <a href="./global.html#AccordionItem"><code>AccordionItem</code></a>, <a href="./global.html#AccordionTrigger"><code>AccordionTrigger</code></a>, <a href="./global.html#AccordionContent"><code>AccordionContent</code></a></li>
+<li><code>Accordion</code>, <code>AccordionItem</code>, <code>AccordionTrigger</code>, <code>AccordionContent</code></li>
 </ul>
 </li>
 <li><strong>Navigation Menu</strong>
 <ul>
-<li><a href="./global.html#NavigationMenu"><code>NavigationMenu</code></a>, <a href="./global.html#NavigationMenuList"><code>NavigationMenuList</code></a>, <a href="./global.html#NavigationMenuItem"><code>NavigationMenuItem</code></a></li>
-<li><a href="./global.html#NavigationMenuTrigger"><code>NavigationMenuTrigger</code></a>, <a href="./global.html#NavigationMenuContent"><code>NavigationMenuContent</code></a>, <a href="./global.html#NavigationMenuLink"><code>NavigationMenuLink</code></a></li>
-<li><a href="./global.html#NavigationMenuIndicator"><code>NavigationMenuIndicator</code></a>, <a href="./global.html#NavigationMenuViewport"><code>NavigationMenuViewport</code></a></li>
-<li><a href="./global.html#navigationMenuTriggerStyle"><code>navigationMenuTriggerStyle</code></a></li>
+<li><code>NavigationMenu</code>, <code>NavigationMenuList</code>, <code>NavigationMenuItem</code></li>
+<li><code>NavigationMenuTrigger</code>, <code>NavigationMenuContent</code>, <code>NavigationMenuLink</code></li>
+<li><code>NavigationMenuIndicator</code>, <code>NavigationMenuViewport</code></li>
+<li><code>navigationMenuTriggerStyle</code></li>
 </ul>
 </li>
 <li><strong>Carousel</strong>
 <ul>
-<li><a href="./global.html#Carousel"><code>Carousel</code></a>, <a href="./global.html#CarouselContent"><code>CarouselContent</code></a>, <a href="./global.html#CarouselItem"><code>CarouselItem</code></a></li>
-<li><a href="./global.html#CarouselPrevious"><code>CarouselPrevious</code></a>, <a href="./global.html#CarouselNext"><code>CarouselNext</code></a></li>
+<li><code>Carousel</code>, <code>CarouselContent</code>, <code>CarouselItem</code></li>
+<li><code>CarouselPrevious</code>, <code>CarouselNext</code></li>
 </ul>
 </li>
 <li><strong>Toast</strong>
 <ul>
-<li><a href="./global.html#Toast"><code>Toast</code></a>, <a href="./global.html#ToastAction"><code>ToastAction</code></a>, <a href="./global.html#ToastClose"><code>ToastClose</code></a></li>
-<li><a href="./global.html#ToastTitle"><code>ToastTitle</code></a>, <a href="./global.html#ToastDescription"><code>ToastDescription</code></a>, <a href="./global.html#ToastViewport"><code>ToastViewport</code></a></li>
-<li><a href="./global.html#Toaster"><code>Toaster</code></a> - Toast container</li>
+<li><code>Toast</code>, <code>ToastAction</code>, <code>ToastClose</code></li>
+<li><code>ToastTitle</code>, <code>ToastDescription</code>, <code>ToastViewport</code></li>
+<li><code>Toaster</code> - Toast container</li>
 </ul>
 </li>
 <li><strong>Tooltip</strong>
 <ul>
-<li><a href="./global.html#Tooltip"><code>Tooltip</code></a>, <a href="./global.html#TooltipTrigger"><code>TooltipTrigger</code></a>, <a href="./global.html#TooltipContent"><code>TooltipContent</code></a></li>
+<li><code>Tooltip</code>, <code>TooltipTrigger</code>, <code>TooltipContent</code></li>
 </ul>
 </li>
 <li><strong>Popover</strong>
 <ul>
-<li><a href="./global.html#Popover"><code>Popover</code></a>, <a href="./global.html#PopoverTrigger"><code>PopoverTrigger</code></a>, <a href="./global.html#PopoverContent"><code>PopoverContent</code></a></li>
+<li><code>Popover</code>, <code>PopoverTrigger</code>, <code>PopoverContent</code></li>
 </ul>
 </li>
 <li><strong>Other UI</strong>
 <ul>
-<li><a href="./global.html#Input"><code>Input</code></a> - Input field</li>
-<li><a href="./global.html#Textarea"><code>Textarea</code></a> - Text area</li>
-<li><a href="./global.html#Checkbox"><code>Checkbox</code></a> - Checkbox</li>
-<li><a href="./global.html#Switch"><code>Switch</code></a> - Switch</li>
-<li><a href="./global.html#RadioGroup"><code>RadioGroup</code></a>, <a href="./global.html#RadioGroupItem"><code>RadioGroupItem</code></a> - Radio group</li>
-<li><a href="./global.html#Label"><code>Label</code></a> - Label</li>
-<li><a href="./global.html#Badge"><code>Badge</code></a>, <a href="./global.html#badgeVariants"><code>badgeVariants</code></a> - Badge</li>
-<li><a href="./global.html#Calendar"><code>Calendar</code></a> - Calendar</li>
-<li><a href="./global.html#Separator"><code>Separator</code></a> - Separator</li>
-<li><a href="./global.html#ScrollArea"><code>ScrollArea</code></a>, <a href="./global.html#ScrollBar"><code>ScrollBar</code></a> - Scroll area</li>
-<li><a href="./global.html#Status"><code>Status</code></a> - Status indicator</li>
+<li><code>Input</code> - Input field</li>
+<li><code>Textarea</code> - Text area</li>
+<li><code>Checkbox</code> - Checkbox</li>
+<li><code>Switch</code> - Switch</li>
+<li><code>RadioGroup</code>, <code>RadioGroupItem</code> - Radio group</li>
+<li><code>Label</code> - Label</li>
+<li><code>Badge</code>, <code>badgeVariants</code> - Badge</li>
+<li><code>Calendar</code> - Calendar</li>
+<li><code>Separator</code> - Separator</li>
+<li><code>ScrollArea</code>, <code>ScrollBar</code> - Scroll area</li>
+<li><code>Status</code> - Status indicator</li>
 </ul>
 </li>
 </ul>
 <h3>User Interface</h3>
 <ul>
-<li><a href="./global.html#Login"><code>Login</code></a> - Login page
-<ul>
-<li><a href="./global.html#LoginForm"><code>LoginForm</code></a> - Login form</li>
-<li><a href="./global.html#ForgotPassword"><code>ForgotPassword</code></a> - Forgot password</li>
-</ul>
-</li>
-<li><a href="./global.html#UserSetting"><code>UserSetting</code></a> - User settings
-<ul>
-<li><a href="./global.html#UserInfoForm"><code>UserInfoForm</code></a> - User info form</li>
-<li><code>PasswordChangeContent</code> - Password change</li>
-</ul>
-</li>
+<li><code>Login</code> - Login page</li>
+<li><code>UserSetting</code> - User settings</li>
 </ul>
 <h3>Utility Components</h3>
 <ul>
-<li><a href="./global.html#Loading"><code>Loading</code></a> - Loading component
+<li><code>Loading</code> - Loading component
 <ul>
-<li><a href="./global.html#Loader"><code>Loader</code></a> - Loader</li>
-<li><a href="./global.html#LoadingDots"><code>LoadingDots</code></a> - Loading dots</li>
-<li><a href="./global.html#LoadingSpinner"><code>LoadingSpinner</code></a> - Loading spinner</li>
+<li><code>LoadingDots</code> - Loading dots</li>
+<li><code>LoadingSpinner</code> - Loading spinner</li>
 </ul>
 </li>
-<li><a href="./global.html#EmptyState"><code>EmptyState</code></a> - Empty state display</li>
-<li><a href="./global.html#FallbackUi"><code>FallbackUi</code></a> - Fallback UI</li>
-<li><a href="./global.html#LazyLoader"><code>LazyLoader</code></a> - Lazy loader</li>
-<li><a href="./global.html#MultiStepForm"><code>MultiStepForm</code></a> - Multi-step form
+<li><code>EmptyState</code> - Empty state display</li>
+<li><code>ConfirmDialog</code> - Confirmation dialog (custom message, icon, loading state support)</li>
+<li><code>AppIcon</code> - Application icon component</li>
+<li><code>FallbackUi</code> - Fallback UI</li>
+<li><code>LazyLoader</code> - Lazy loading</li>
+<li><code>MultiStepForm</code> - Multi-step form
 <ul>
-<li><a href="./global.html#StepperIndicator"><code>StepperIndicator</code></a> - Stepper indicator</li>
+<li><code>StepperIndicator</code> - Step indicator</li>
 </ul>
 </li>
-<li><a href="./global.html#NavigationTabs"><code>NavigationTabs</code></a> - Navigation tabs</li>
-<li><a href="./global.html#NotFound"><code>NotFound</code></a> - 404 page</li>
-<li><a href="./global.html#NotAuth"><code>NotAuth</code></a> - Authentication failed page</li>
-<li><a href="./global.html#LastUpdated"><code>LastUpdated</code></a> - Last updated time</li>
-<li><a href="./global.html#QuestionTooltip"><code>QuestionTooltip</code></a> - Help tooltip</li>
-<li><a href="./global.html#CooldownButton"><code>CooldownButton</code></a> - Cooldown button</li>
+<li><code>NavigationTabs</code> - Navigation tabs</li>
+<li><code>NotFound</code> - 404 page</li>
+<li><code>NotAuth</code> - Authentication failure page</li>
+<li><code>LastUpdated</code> - Last update time</li>
+<li><code>QuestionTooltip</code> - Help tooltip</li>
+<li><code>CooldownButton</code> - Cooldown button</li>
 </ul>
 <h2>🪝 Custom Hooks</h2>
 <h3>Authentication &amp; API</h3>
 <ul>
-<li><a href="./global.html#useAuth"><code>useAuth</code></a> - Authentication state management</li>
-<li><a href="./global.html#useApi"><code>useApi</code></a> - API client (inventory, events, measurements, alarms)</li>
+<li><code>useAuth</code> - Authentication state management</li>
+<li><code>useApi</code> - API client (inventory, events, measurements, alarms)</li>
 </ul>
 <h3>UI &amp; State</h3>
 <ul>
-<li><a href="./global.html#useDark"><code>useDark</code></a> - Dark mode</li>
-<li><a href="./global.html#useToast"><code>useToast</code></a> - Toast notifications</li>
-<li><a href="./global.html#useBranding"><code>useBranding</code></a> - Branding configuration</li>
-<li><a href="./global.html#useTranslation"><code>useTranslation</code></a> - Internationalization</li>
+<li><code>useDark</code> - Dark mode</li>
+<li><code>useToast</code> - Toast notifications</li>
+<li><code>useBranding</code> - Branding settings</li>
+<li><code>useTranslation</code> - Multi-language</li>
+<li><code>useSidebarStore</code> - Sidebar state management (Zustand)</li>
+<li><code>useSidebarContext</code> - Sidebar context</li>
 </ul>
 <h3>Data Management</h3>
 <ul>
-<li><a href="./global.html#useDeviceTree"><code>useDeviceTree</code></a> - Device tree</li>
-<li><a href="./global.html#useDeviceInventory"><code>useDeviceInventory</code></a> - Device inventory</li>
-<li><a href="./global.html#useVirtualTable"><code>useVirtualTable</code></a> - Virtual scroll table</li>
-<li><a href="./global.html#useWidgetSize"><code>useWidgetSize</code></a> - Widget size management</li>
-<li><a href="./global.html#useUltivisDeviceContext"><code>useUltivisDeviceContext</code></a> - Ultivis device context</li>
-<li><a href="./global.html#useUltivisLogic"><code>useUltivisLogic</code></a> - Ultivis business logic</li>
+<li><code>useDeviceTree</code> - Device tree</li>
+<li><code>useDeviceInventory</code> - Device inventory</li>
+<li><code>useVirtualTable</code> - Virtual scroll table</li>
+<li><code>useWidgetSize</code> - Widget size management</li>
+<li><code>useUltivisDeviceContext</code> - Ultivis device context</li>
+<li><code>useUltivisLogic</code> - Ultivis business logic</li>
 </ul>
 <h3>Navigation &amp; Context</h3>
 <ul>
-<li><a href="./global.html#useRoutingContext"><code>useRoutingContext</code></a> (useRouting) - Routing context</li>
-<li><a href="./global.html#useInventoryContext"><code>useInventoryContext</code></a> - Inventory context</li>
-<li><a href="./global.html#useTransitionNavigate"><code>useTransitionNavigate</code></a> - Transition navigation</li>
+<li><code>useRoutingContext</code> (useRouting) - Routing context</li>
+<li><code>useInventoryContext</code> - Inventory context</li>
+<li><code>useTransitionNavigate</code> - Transition navigation</li>
 </ul>
 <h3>Advanced Hooks</h3>
 <ul>
-<li><a href="./global.html#useCustomMutation"><code>useCustomMutation</code></a> - Custom mutation hook</li>
-<li><a href="./global.html#useIntersectionObserver"><code>useIntersectionObserver</code></a> - Intersection Observer API hook</li>
-<li><a href="./global.html#useUpdatedConfig"><code>useUpdatedConfig</code></a> - Updated configuration management</li>
-<li><a href="./global.html#useUpdateForTypeDashboard"><code>useUpdateForTypeDashboard</code></a> - Type dashboard update</li>
+<li><code>useCustomMutation</code> - Custom mutation hook</li>
+<li><code>useIntersectionObserver</code> - Intersection Observer API hook</li>
+<li><code>useUpdatedConfig</code> - Updated configuration management</li>
+<li><code>useUpdateForTypeDashboard</code> - Type dashboard update</li>
 </ul>
 <h2>🎁 Providers</h2>
 <p>Context provider components:</p>
 <ul>
-<li><a href="./global.html#AuthProvider"><code>AuthProvider</code></a> - Authentication context provider</li>
-<li><a href="./global.html#BrandingProvider"><code>BrandingProvider</code></a> - Branding context provider</li>
-<li><a href="./global.html#DarkProvider"><code>DarkProvider</code></a> - Dark mode context provider</li>
-<li><a href="./global.html#RoutingProvider"><code>RoutingProvider</code></a> - Routing context provider</li>
-<li><a href="./global.html#UltivisDeviceProvider"><code>UltivisDeviceProvider</code></a> - Ultivis device context provider</li>
+<li><code>AuthProvider</code> - Authentication context provider</li>
+<li><code>BrandingProvider</code> - Branding context provider</li>
+<li><code>DarkProvider</code> - Dark mode context provider</li>
+<li><code>RoutingProvider</code> - Routing context provider</li>
+<li><code>UltivisDeviceProvider</code> - Ultivis device context provider</li>
 </ul>
 <h2>📦 State Stores</h2>
 <p>Zustand-based state management:</p>
 <ul>
-<li><a href="./global.html#useRoleStore"><code>useRoleStore</code></a> - User roles and permissions management</li>
-<li><a href="./global.html#useUserAgentStore"><code>useUserAgentStore</code></a> - User agent and device type detection</li>
+<li><code>useRoleStore</code> - User role and permission management</li>
+<li><code>useUserAgentStore</code> - User agent and device type detection</li>
 </ul>
 <h2>🗂️ Data &amp; Constants</h2>
 <p>Ultivis IoT platform and application data schemas:</p>
@@ -398,7 +426,7 @@ function MyPage() {
 <ul>
 <li>Chart types (Line, Bar, Pie, Gauge, etc.)</li>
 <li>Chart display options</li>
-<li>Chart color palettes</li>
+<li>Chart color palette</li>
 </ul>
 <h3>Event Data</h3>
 <ul>
@@ -418,7 +446,7 @@ function MyPage() {
 <h3>Measurements</h3>
 <ul>
 <li>Ultivis IoT measurement data schema</li>
-<li>Time-series data types</li>
+<li>Time series data types</li>
 </ul>
 <h3>Period Data</h3>
 <ul>
@@ -428,7 +456,7 @@ function MyPage() {
 </ul>
 <h3>Tenant Configuration</h3>
 <ul>
-<li>Ultivis IoT tenant configuration schema</li>
+<li>Ultivis IoT tenant settings schema</li>
 <li>Tenant property definitions</li>
 </ul>
 <h2>🎨 Styles &amp; Theming</h2>
@@ -441,7 +469,7 @@ function MyPage() {
 <p>Helper functions and utilities:</p>
 <h3>Styling &amp; UI</h3>
 <ul>
-<li><a href="./global.html#cn"><code>cn</code></a> - Class name merging (TailwindCSS + clsx)</li>
+<li><code>cn</code> - Class name merging (TailwindCSS + clsx)</li>
 </ul>
 <h3>Authentication</h3>
 <ul>
@@ -454,12 +482,12 @@ function MyPage() {
 </ul>
 <h3>Widget Management</h3>
 <ul>
-<li><a href="./global.html#widgetManager"><code>widgetManager</code></a> - Widget registration, configuration, and rendering management</li>
+<li><code>widgetManager</code> - Widget registration, configuration, rendering management</li>
 </ul>
 <h3>Internationalization</h3>
 <ul>
-<li><code>i18n</code> - Multi-language configuration and language switching</li>
-<li><a href="./global.html#humanizeAppName"><code>humanizeAppName</code></a> - Convert app name to human-readable format</li>
+<li><code>i18n</code> - Multi-language settings and language switching</li>
+<li><code>humanizeAppName</code> - Convert app name to human-readable format</li>
 </ul></article>
     </section>
 
@@ -471,13 +499,13 @@ function MyPage() {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-@ultivis-iot_react.html">@ultivis-iot/react</a></li></ul><h3>Global</h3><ul><li><a href="global.html#Accordion">Accordion</a></li><li><a href="global.html#AccordionContent">AccordionContent</a></li><li><a href="global.html#AccordionItem">AccordionItem</a></li><li><a href="global.html#AccordionTrigger">AccordionTrigger</a></li><li><a href="global.html#ActionBar">ActionBar</a></li><li><a href="global.html#ActionItem">ActionItem</a></li><li><a href="global.html#AddData">AddData</a></li><li><a href="global.html#AggregationPicker">AggregationPicker</a></li><li><a href="global.html#AppItem">AppItem</a></li><li><a href="global.html#AppProviders">AppProviders</a></li><li><a href="global.html#AppSwitcher">AppSwitcher</a></li><li><a href="global.html#AppSwitcherItem">AppSwitcherItem</a></li><li><a href="global.html#AuthProvider">AuthProvider</a></li><li><a href="global.html#Badge">Badge</a></li><li><a href="global.html#BrandingProvider">BrandingProvider</a></li><li><a href="global.html#Button">Button</a></li><li><a href="global.html#Calendar">Calendar</a></li><li><a href="global.html#Card">Card</a></li><li><a href="global.html#CardContent">CardContent</a></li><li><a href="global.html#CardDescription">CardDescription</a></li><li><a href="global.html#CardFooter">CardFooter</a></li><li><a href="global.html#CardHeader">CardHeader</a></li><li><a href="global.html#CardTitle">CardTitle</a></li><li><a href="global.html#Carousel">Carousel</a></li><li><a href="global.html#CarouselContent">CarouselContent</a></li><li><a href="global.html#CarouselContext">CarouselContext</a></li><li><a href="global.html#CarouselItem">CarouselItem</a></li><li><a href="global.html#CarouselNext">CarouselNext</a></li><li><a href="global.html#CarouselPrevious">CarouselPrevious</a></li><li><a href="global.html#Checkbox">Checkbox</a></li><li><a href="global.html#ComputedPropertyConfig">ComputedPropertyConfig</a></li><li><a href="global.html#Configuration">Configuration</a></li><li><a href="global.html#ContextDashboard">ContextDashboard</a></li><li><a href="global.html#ContextDashboardActionItems">ContextDashboardActionItems</a></li><li><a href="global.html#ContextGrid">ContextGrid</a></li><li><a href="global.html#ContextWidgetActionItems">ContextWidgetActionItems</a></li><li><a href="global.html#ContextWidgetWrapper">ContextWidgetWrapper</a></li><li><a href="global.html#CooldownButton">CooldownButton</a></li><li><a href="global.html#DarkProvider">DarkProvider</a></li><li><a href="global.html#DashboardDateProvider">DashboardDateProvider</a></li><li><a href="global.html#DashboardModal">DashboardModal</a></li><li><a href="global.html#DashboardTabs">DashboardTabs</a></li><li><a href="global.html#DataDetail">DataDetail</a></li><li><a href="global.html#DataItem">DataItem</a></li><li><a href="global.html#DataList">DataList</a></li><li><a href="global.html#DataManager">DataManager</a></li><li><a href="global.html#DataMenu">DataMenu</a></li><li><a href="global.html#DatePicker">DatePicker</a></li><li><a href="global.html#DefaultDatePeriodSection">DefaultDatePeriodSection</a></li><li><a href="global.html#DeviceTree">DeviceTree</a></li><li><a href="global.html#Dialog">Dialog</a></li><li><a href="global.html#DialogClose">DialogClose</a></li><li><a href="global.html#DialogContent">DialogContent</a></li><li><a href="global.html#DialogDescription">DialogDescription</a></li><li><a href="global.html#DialogFooter">DialogFooter</a></li><li><a href="global.html#DialogHeader">DialogHeader</a></li><li><a href="global.html#DialogOverlay">DialogOverlay</a></li><li><a href="global.html#DialogPortal">DialogPortal</a></li><li><a href="global.html#DialogTitle">DialogTitle</a></li><li><a href="global.html#DialogTrigger">DialogTrigger</a></li><li><a href="global.html#DropdownMenu">DropdownMenu</a></li><li><a href="global.html#DropdownMenuCheckboxItem">DropdownMenuCheckboxItem</a></li><li><a href="global.html#DropdownMenuContent">DropdownMenuContent</a></li><li><a href="global.html#DropdownMenuGroup">DropdownMenuGroup</a></li><li><a href="global.html#DropdownMenuItem">DropdownMenuItem</a></li><li><a href="global.html#DropdownMenuPortal">DropdownMenuPortal</a></li><li><a href="global.html#DropdownMenuRadioGroup">DropdownMenuRadioGroup</a></li><li><a href="global.html#DropdownMenuShortcut">DropdownMenuShortcut</a></li><li><a href="global.html#DropdownMenuSub">DropdownMenuSub</a></li><li><a href="global.html#DropdownMenuTrigger">DropdownMenuTrigger</a></li><li><a href="global.html#DynamicWidget">DynamicWidget</a></li><li><a href="global.html#EditableField">EditableField</a></li><li><a href="global.html#EmptyState">EmptyState</a></li><li><a href="global.html#FallbackUi">FallbackUi</a></li><li><a href="global.html#ForgotPassword">ForgotPassword</a></li><li><a href="global.html#Form">Form</a></li><li><a href="global.html#FormCheckboxField">FormCheckboxField</a></li><li><a href="global.html#FormColorField">FormColorField</a></li><li><a href="global.html#FormField">FormField</a></li><li><a href="global.html#FormIconSelectField">FormIconSelectField</a></li><li><a href="global.html#FormInputArrayField">FormInputArrayField</a></li><li><a href="global.html#FormInputField">FormInputField</a></li><li><a href="global.html#FormItem">FormItem</a></li><li><a href="global.html#FormMessage">FormMessage</a></li><li><a href="global.html#FormRadioField">FormRadioField</a></li><li><a href="global.html#FormSelectField">FormSelectField</a></li><li><a href="global.html#FormSwitchField">FormSwitchField</a></li><li><a href="global.html#FormTextareaField">FormTextareaField</a></li><li><a href="global.html#GeneralSection">GeneralSection</a></li><li><a href="global.html#GroupAccordion">GroupAccordion</a></li><li><a href="global.html#Header">Header</a></li><li><a href="global.html#HeaderDivider">HeaderDivider</a></li><li><a href="global.html#HeaderStyleEnum">HeaderStyleEnum</a></li><li><a href="global.html#IconComponent">IconComponent</a></li><li><a href="global.html#Input">Input</a></li><li><a href="global.html#Label">Label</a></li><li><a href="global.html#LastUpdated">LastUpdated</a></li><li><a href="global.html#Layout">Layout</a></li><li><a href="global.html#LayoutSection">LayoutSection</a></li><li><a href="global.html#LazyLoader">LazyLoader</a></li><li><a href="global.html#Loader">Loader</a></li><li><a href="global.html#Loading">Loading</a></li><li><a href="global.html#LoadingDots">LoadingDots</a></li><li><a href="global.html#LoadingSpinner">LoadingSpinner</a></li><li><a href="global.html#Login">Login</a></li><li><a href="global.html#LoginForm">LoginForm</a></li><li><a href="global.html#MenuBar">MenuBar</a></li><li><a href="global.html#MultiStepForm">MultiStepForm</a></li><li><a href="global.html#NavigationMenu">NavigationMenu</a></li><li><a href="global.html#NavigationMenuContent">NavigationMenuContent</a></li><li><a href="global.html#NavigationMenuIndicator">NavigationMenuIndicator</a></li><li><a href="global.html#NavigationMenuItem">NavigationMenuItem</a></li><li><a href="global.html#NavigationMenuLink">NavigationMenuLink</a></li><li><a href="global.html#NavigationMenuList">NavigationMenuList</a></li><li><a href="global.html#NavigationMenuTrigger">NavigationMenuTrigger</a></li><li><a href="global.html#NavigationMenuViewport">NavigationMenuViewport</a></li><li><a href="global.html#NavigationTabs">NavigationTabs</a></li><li><a href="global.html#NotAuth">NotAuth</a></li><li><a href="global.html#NotFound">NotFound</a></li><li><a href="global.html#Popover">Popover</a></li><li><a href="global.html#PopoverContent">PopoverContent</a></li><li><a href="global.html#PopoverTrigger">PopoverTrigger</a></li><li><a href="global.html#PreviewSection">PreviewSection</a></li><li><a href="global.html#PreviewWidget">PreviewWidget</a></li><li><a href="global.html#PropertySelectTable">PropertySelectTable</a></li><li><a href="global.html#PropertySelector">PropertySelector</a></li><li><a href="global.html#PropertyTable">PropertyTable</a></li><li><a href="global.html#QuestionTooltip">QuestionTooltip</a></li><li><a href="global.html#RadioGroup">RadioGroup</a></li><li><a href="global.html#RadioGroupItem">RadioGroupItem</a></li><li><a href="global.html#RemoveModal">RemoveModal</a></li><li><a href="global.html#RenderEmptyStateMessage">RenderEmptyStateMessage</a></li><li><a href="global.html#RoutingProvider">RoutingProvider</a></li><li><a href="global.html#ScrollArea">ScrollArea</a></li><li><a href="global.html#ScrollBar">ScrollBar</a></li><li><a href="global.html#SearchDeviceTree">SearchDeviceTree</a></li><li><a href="global.html#Select">Select</a></li><li><a href="global.html#SelectContent">SelectContent</a></li><li><a href="global.html#SelectGroup">SelectGroup</a></li><li><a href="global.html#SelectItem">SelectItem</a></li><li><a href="global.html#SelectLabel">SelectLabel</a></li><li><a href="global.html#SelectTrigger">SelectTrigger</a></li><li><a href="global.html#SelectValue">SelectValue</a></li><li><a href="global.html#SelectWidget">SelectWidget</a></li><li><a href="global.html#Separator">Separator</a></li><li><a href="global.html#Sidebar">Sidebar</a></li><li><a href="global.html#SidebarAccordionItem">SidebarAccordionItem</a></li><li><a href="global.html#SidebarContext">SidebarContext</a></li><li><a href="global.html#SidebarItem">SidebarItem</a></li><li><a href="global.html#StaticDashboard">StaticDashboard</a></li><li><a href="global.html#StaticWidgetWrapper">StaticWidgetWrapper</a></li><li><a href="global.html#Status">Status</a></li><li><a href="global.html#StepperIndicator">StepperIndicator</a></li><li><a href="global.html#Switch">Switch</a></li><li><a href="global.html#TabItem">TabItem</a></li><li><a href="global.html#Table">Table</a></li><li><a href="global.html#TableBody">TableBody</a></li><li><a href="global.html#TableCaption">TableCaption</a></li><li><a href="global.html#TableCell">TableCell</a></li><li><a href="global.html#TableFooter">TableFooter</a></li><li><a href="global.html#TableHead">TableHead</a></li><li><a href="global.html#TableHeader">TableHeader</a></li><li><a href="global.html#TableRow">TableRow</a></li><li><a href="global.html#Tabs">Tabs</a></li><li><a href="global.html#TabsContent">TabsContent</a></li><li><a href="global.html#TabsList">TabsList</a></li><li><a href="global.html#TabsTrigger">TabsTrigger</a></li><li><a href="global.html#Textarea">Textarea</a></li><li><a href="global.html#Toast">Toast</a></li><li><a href="global.html#ToastAction">ToastAction</a></li><li><a href="global.html#ToastClose">ToastClose</a></li><li><a href="global.html#ToastDescription">ToastDescription</a></li><li><a href="global.html#ToastProvider">ToastProvider</a></li><li><a href="global.html#ToastTitle">ToastTitle</a></li><li><a href="global.html#ToastViewport">ToastViewport</a></li><li><a href="global.html#Toaster">Toaster</a></li><li><a href="global.html#Tooltip">Tooltip</a></li><li><a href="global.html#TooltipContent">TooltipContent</a></li><li><a href="global.html#TooltipProvider">TooltipProvider</a></li><li><a href="global.html#TooltipTrigger">TooltipTrigger</a></li><li><a href="global.html#TreeItem">TreeItem</a></li><li><a href="global.html#TreeParent">TreeParent</a></li><li><a href="global.html#UltivisDeviceProvider">UltivisDeviceProvider</a></li><li><a href="global.html#UserInfoForm">UserInfoForm</a></li><li><a href="global.html#UserMenu">UserMenu</a></li><li><a href="global.html#UserMenuItem">UserMenuItem</a></li><li><a href="global.html#UserSetting">UserSetting</a></li><li><a href="global.html#WidgetDatePicker">WidgetDatePicker</a></li><li><a href="global.html#WidgetModal">WidgetModal</a></li><li><a href="global.html#addAccessedDashboardId">addAccessedDashboardId</a></li><li><a href="global.html#addLanguagePack">addLanguagePack</a></li><li><a href="global.html#alarmPeriod">alarmPeriod</a></li><li><a href="global.html#badgeVariants">badgeVariants</a></li><li><a href="global.html#baseSchema">baseSchema</a></li><li><a href="global.html#buttonVariants">buttonVariants</a></li><li><a href="global.html#calculateDateRange">calculateDateRange</a></li><li><a href="global.html#chartDisplayOptions">chartDisplayOptions</a></li><li><a href="global.html#chartTypeOptions">chartTypeOptions</a></li><li><a href="global.html#checkRole">checkRole</a></li><li><a href="global.html#cn">cn</a></li><li><a href="global.html#createOperation">createOperation</a></li><li><a href="global.html#customPeriod">customPeriod</a></li><li><a href="global.html#dataMinMaxRequireSchema">dataMinMaxRequireSchema</a></li><li><a href="global.html#dataRequireSchema">dataRequireSchema</a></li><li><a href="global.html#dataSchema">dataSchema</a></li><li><a href="global.html#deviceSchema">deviceSchema</a></li><li><a href="global.html#deviceTypeDashboardForDevice">deviceTypeDashboardForDevice</a></li><li><a href="global.html#encodeAuth">encodeAuth</a></li><li><a href="global.html#eventSchema">eventSchema</a></li><li><a href="global.html#fontSchema">fontSchema</a></li><li><a href="global.html#fontWeightSchema">fontWeightSchema</a></li><li><a href="global.html#fontWeights">fontWeights</a></li><li><a href="global.html#fonts">fonts</a></li><li><a href="global.html#getActiveData">getActiveData</a></li><li><a href="global.html#getAlarms">getAlarms</a></li><li><a href="global.html#getAllInventory">getAllInventory</a></li><li><a href="global.html#getApiMap">getApiMap</a></li><li><a href="global.html#getBinary">getBinary</a></li><li><a href="global.html#getChildAssetsList">getChildAssetsList</a></li><li><a href="global.html#getChildAssetsListPaging">getChildAssetsListPaging</a></li><li><a href="global.html#getChildDevicesList">getChildDevicesList</a></li><li><a href="global.html#getComputedType">getComputedType</a></li><li><a href="global.html#getCurrentUser">getCurrentUser</a></li><li><a href="global.html#getDashboards">getDashboards</a></li><li><a href="global.html#getDataPoints">getDataPoints</a></li><li><a href="global.html#getDatapointsFromLocal">getDatapointsFromLocal</a></li><li><a href="global.html#getEvents">getEvents</a></li><li><a href="global.html#getEventsByDate">getEventsByDate</a></li><li><a href="global.html#getEventsByFragment">getEventsByFragment</a></li><li><a href="global.html#getEventsByType">getEventsByType</a></li><li><a href="global.html#getExternalId">getExternalId</a></li><li><a href="global.html#getInventory">getInventory</a></li><li><a href="global.html#getInventoryByFragmentType">getInventoryByFragmentType</a></li><li><a href="global.html#getInventoryByText">getInventoryByText</a></li><li><a href="global.html#getLoginOptions">getLoginOptions</a></li><li><a href="global.html#getMeasurements">getMeasurements</a></li><li><a href="global.html#getMeasurementsByDate">getMeasurementsByDate</a></li><li><a href="global.html#getMeasurementsByFragment">getMeasurementsByFragment</a></li><li><a href="global.html#getMeasurementsBySeries">getMeasurementsBySeries</a></li><li><a href="global.html#getSchema">getSchema</a></li><li><a href="global.html#getSupported">getSupported</a></li><li><a href="global.html#getTargetPath">getTargetPath</a></li><li><a href="global.html#getTypesFromLocal">getTypesFromLocal</a></li><li><a href="global.html#getWindowSize">getWindowSize</a></li><li><a href="global.html#hasAccessedDashboardId">hasAccessedDashboardId</a></li><li><a href="global.html#homeDeviceInventory">homeDeviceInventory</a></li><li><a href="global.html#homeGroupInventory">homeGroupInventory</a></li><li><a href="global.html#humanizeAppName">humanizeAppName</a></li><li><a href="global.html#initRoles">initRoles</a></li><li><a href="global.html#initializeState">initializeState</a></li><li><a href="global.html#intervalSchema">intervalSchema</a></li><li><a href="global.html#intervals">intervals</a></li><li><a href="global.html#isDevice">isDevice</a></li><li><a href="global.html#isSameDatapoint">isSameDatapoint</a></li><li><a href="global.html#isSameId">isSameId</a></li><li><a href="global.html#isSameType">isSameType</a></li><li><a href="global.html#list">list</a></li><li><a href="global.html#load">load</a></li><li><a href="global.html#manageRole">manageRole</a></li><li><a href="global.html#managedObjectSchema">managedObjectSchema</a></li><li><a href="global.html#measurementSchema">measurementSchema</a></li><li><a href="global.html#navigationMenuTriggerStyle">navigationMenuTriggerStyle</a></li><li><a href="global.html#period">period</a></li><li><a href="global.html#periodSchema">periodSchema</a></li><li><a href="global.html#postChildAssetToParent">postChildAssetToParent</a></li><li><a href="global.html#postChildAssets">postChildAssets</a></li><li><a href="global.html#postChildInventory">postChildInventory</a></li><li><a href="global.html#postEvents">postEvents</a></li><li><a href="global.html#postInventory">postInventory</a></li><li><a href="global.html#propertySchema">propertySchema</a></li><li><a href="global.html#putAlarm">putAlarm</a></li><li><a href="global.html#putCurrentUser">putCurrentUser</a></li><li><a href="global.html#putDataPoints">putDataPoints</a></li><li><a href="global.html#putInventory">putInventory</a></li><li><a href="global.html#putPassword">putPassword</a></li><li><a href="global.html#realtimeSub">realtimeSub</a></li><li><a href="global.html#realtimeUnSub">realtimeUnSub</a></li><li><a href="global.html#reducer">reducer</a></li><li><a href="global.html#register">register</a></li><li><a href="global.html#registerList">registerList</a></li><li><a href="global.html#removeChildAssetToParent">removeChildAssetToParent</a></li><li><a href="global.html#removeInventory">removeInventory</a></li><li><a href="global.html#resetQueryDeleteInvalidated">resetQueryDeleteInvalidated</a></li><li><a href="global.html#resetQueryInvalidated">resetQueryInvalidated</a></li><li><a href="global.html#setAccess">setAccess</a></li><li><a href="global.html#setBasicAuth">setBasicAuth</a></li><li><a href="global.html#setDatapointsToLocal">setDatapointsToLocal</a></li><li><a href="global.html#setIsDevice">setIsDevice</a></li><li><a href="global.html#setIsFullScreen">setIsFullScreen</a></li><li><a href="global.html#setTypesToLocal">setTypesToLocal</a></li><li><a href="global.html#sizeVariants">sizeVariants</a></li><li><a href="global.html#tenantSchema">tenantSchema</a></li><li><a href="global.html#textSchema">textSchema</a></li><li><a href="global.html#useApi">useApi</a></li><li><a href="global.html#useAuth">useAuth</a></li><li><a href="global.html#useBranding">useBranding</a></li><li><a href="global.html#useCarousel">useCarousel</a></li><li><a href="global.html#useCustomMutation">useCustomMutation</a></li><li><a href="global.html#useDark">useDark</a></li><li><a href="global.html#useDashboardActions">useDashboardActions</a></li><li><a href="global.html#useDashboardDate">useDashboardDate</a></li><li><a href="global.html#useDataManager">useDataManager</a></li><li><a href="global.html#useDatapointActions">useDatapointActions</a></li><li><a href="global.html#useDeviceInventory">useDeviceInventory</a></li><li><a href="global.html#useDeviceTree">useDeviceTree</a></li><li><a href="global.html#useDraftDashboard">useDraftDashboard</a></li><li><a href="global.html#useFormField">useFormField</a></li><li><a href="global.html#useInfiniteVirtualTable">useInfiniteVirtualTable</a></li><li><a href="global.html#useIntersectionObserver">useIntersectionObserver</a></li><li><a href="global.html#useInventoryContext">useInventoryContext</a></li><li><a href="global.html#useRoleStore">useRoleStore</a></li><li><a href="global.html#useRouting">useRouting</a></li><li><a href="global.html#useSidebarContext">useSidebarContext</a></li><li><a href="global.html#useSidebarStore">useSidebarStore</a></li><li><a href="global.html#useToast">useToast</a></li><li><a href="global.html#useTransitionNavigate">useTransitionNavigate</a></li><li><a href="global.html#useTranslation">useTranslation</a></li><li><a href="global.html#useUltivisDeviceContext">useUltivisDeviceContext</a></li><li><a href="global.html#useUltivisLogic">useUltivisLogic</a></li><li><a href="global.html#useUpdateForTypeDashboard">useUpdateForTypeDashboard</a></li><li><a href="global.html#useUpdatedConfig">useUpdatedConfig</a></li><li><a href="global.html#useUserAgentStore">useUserAgentStore</a></li><li><a href="global.html#useVirtualTable">useVirtualTable</a></li><li><a href="global.html#useWidgetSize">useWidgetSize</a></li><li><a href="global.html#widgetManager">widgetManager</a></li><li><a href="global.html#yAxisPositionOptions">yAxisPositionOptions</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-@ultivis-iot_react.html">@ultivis-iot/react</a></li></ul><h3>Global</h3><ul><li><a href="global.html#Accordion">Accordion</a></li><li><a href="global.html#AccordionContent">AccordionContent</a></li><li><a href="global.html#AccordionItem">AccordionItem</a></li><li><a href="global.html#AccordionTrigger">AccordionTrigger</a></li><li><a href="global.html#ActionBar">ActionBar</a></li><li><a href="global.html#ActionItem">ActionItem</a></li><li><a href="global.html#AddData">AddData</a></li><li><a href="global.html#AggregationPicker">AggregationPicker</a></li><li><a href="global.html#AppItem">AppItem</a></li><li><a href="global.html#AppProviders">AppProviders</a></li><li><a href="global.html#AppSwitcher">AppSwitcher</a></li><li><a href="global.html#AppSwitcherItem">AppSwitcherItem</a></li><li><a href="global.html#AuthApiProvider">AuthApiProvider</a></li><li><a href="global.html#AuthProvider">AuthProvider</a></li><li><a href="global.html#BREAKPOINTS_EDIT">BREAKPOINTS_EDIT</a></li><li><a href="global.html#BREAKPOINTS_FROZEN">BREAKPOINTS_FROZEN</a></li><li><a href="global.html#Badge">Badge</a></li><li><a href="global.html#BrandingProvider">BrandingProvider</a></li><li><a href="global.html#Button">Button</a></li><li><a href="global.html#C8yAuthProvider">C8yAuthProvider</a></li><li><a href="global.html#COLS_EDIT">COLS_EDIT</a></li><li><a href="global.html#COLS_FROZEN">COLS_FROZEN</a></li><li><a href="global.html#Calendar">Calendar</a></li><li><a href="global.html#Card">Card</a></li><li><a href="global.html#CardContent">CardContent</a></li><li><a href="global.html#CardDescription">CardDescription</a></li><li><a href="global.html#CardFooter">CardFooter</a></li><li><a href="global.html#CardHeader">CardHeader</a></li><li><a href="global.html#CardTitle">CardTitle</a></li><li><a href="global.html#Carousel">Carousel</a></li><li><a href="global.html#CarouselContent">CarouselContent</a></li><li><a href="global.html#CarouselContext">CarouselContext</a></li><li><a href="global.html#CarouselItem">CarouselItem</a></li><li><a href="global.html#CarouselNext">CarouselNext</a></li><li><a href="global.html#CarouselPrevious">CarouselPrevious</a></li><li><a href="global.html#Checkbox">Checkbox</a></li><li><a href="global.html#ComputedPropertyConfig">ComputedPropertyConfig</a></li><li><a href="global.html#Configuration">Configuration</a></li><li><a href="global.html#ConfirmDialog">ConfirmDialog</a></li><li><a href="global.html#ContextDashboard">ContextDashboard</a></li><li><a href="global.html#ContextDashboardActionItems">ContextDashboardActionItems</a></li><li><a href="global.html#ContextGrid">ContextGrid</a></li><li><a href="global.html#ContextWidgetActionItems">ContextWidgetActionItems</a></li><li><a href="global.html#ContextWidgetWrapper">ContextWidgetWrapper</a></li><li><a href="global.html#CooldownButton">CooldownButton</a></li><li><a href="global.html#CustomApiProviders">CustomApiProviders</a></li><li><a href="global.html#DarkProvider">DarkProvider</a></li><li><a href="global.html#DashboardApiProvider">DashboardApiProvider</a></li><li><a href="global.html#DashboardDateProvider">DashboardDateProvider</a></li><li><a href="global.html#DashboardDialog">DashboardDialog</a></li><li><a href="global.html#DashboardTabs">DashboardTabs</a></li><li><a href="global.html#DataDetail">DataDetail</a></li><li><a href="global.html#DataItem">DataItem</a></li><li><a href="global.html#DataList">DataList</a></li><li><a href="global.html#DataManager">DataManager</a></li><li><a href="global.html#DataMenu">DataMenu</a></li><li><a href="global.html#DataTableFilterModal">DataTableFilterModal</a></li><li><a href="global.html#DatePicker">DatePicker</a></li><li><a href="global.html#DefaultDatePeriodSection">DefaultDatePeriodSection</a></li><li><a href="global.html#DeviceTree">DeviceTree</a></li><li><a href="global.html#Dialog">Dialog</a></li><li><a href="global.html#DialogClose">DialogClose</a></li><li><a href="global.html#DialogContent">DialogContent</a></li><li><a href="global.html#DialogDescription">DialogDescription</a></li><li><a href="global.html#DialogFooter">DialogFooter</a></li><li><a href="global.html#DialogHeader">DialogHeader</a></li><li><a href="global.html#DialogOverlay">DialogOverlay</a></li><li><a href="global.html#DialogPortal">DialogPortal</a></li><li><a href="global.html#DialogTitle">DialogTitle</a></li><li><a href="global.html#DialogTrigger">DialogTrigger</a></li><li><a href="global.html#DropdownMenu">DropdownMenu</a></li><li><a href="global.html#DropdownMenuCheckboxItem">DropdownMenuCheckboxItem</a></li><li><a href="global.html#DropdownMenuContent">DropdownMenuContent</a></li><li><a href="global.html#DropdownMenuGroup">DropdownMenuGroup</a></li><li><a href="global.html#DropdownMenuItem">DropdownMenuItem</a></li><li><a href="global.html#DropdownMenuPortal">DropdownMenuPortal</a></li><li><a href="global.html#DropdownMenuRadioGroup">DropdownMenuRadioGroup</a></li><li><a href="global.html#DropdownMenuShortcut">DropdownMenuShortcut</a></li><li><a href="global.html#DropdownMenuSub">DropdownMenuSub</a></li><li><a href="global.html#DropdownMenuTrigger">DropdownMenuTrigger</a></li><li><a href="global.html#DynamicDashboard">DynamicDashboard</a></li><li><a href="global.html#DynamicDashboardActionItems">DynamicDashboardActionItems</a></li><li><a href="global.html#DynamicDashboardDialog">DynamicDashboardDialog</a></li><li><a href="global.html#DynamicDatePeriodSection">DynamicDatePeriodSection</a></li><li><a href="global.html#DynamicGeneralSection">DynamicGeneralSection</a></li><li><a href="global.html#DynamicGrid">DynamicGrid</a></li><li><a href="global.html#DynamicWidget">DynamicWidget</a></li><li><a href="global.html#DynamicWidgetActionItems">DynamicWidgetActionItems</a></li><li><a href="global.html#DynamicWidgetWrapper">DynamicWidgetWrapper</a></li><li><a href="global.html#EditableField">EditableField</a></li><li><a href="global.html#EmptyState">EmptyState</a></li><li><a href="global.html#ExpandableCell">ExpandableCell</a></li><li><a href="global.html#FallbackUi">FallbackUi</a></li><li><a href="global.html#FilterItem">FilterItem</a></li><li><a href="global.html#ForgotPassword">ForgotPassword</a></li><li><a href="global.html#Form">Form</a></li><li><a href="global.html#FormCheckboxField">FormCheckboxField</a></li><li><a href="global.html#FormColorField">FormColorField</a></li><li><a href="global.html#FormField">FormField</a></li><li><a href="global.html#FormIconSelectField">FormIconSelectField</a></li><li><a href="global.html#FormInputArrayField">FormInputArrayField</a></li><li><a href="global.html#FormInputField">FormInputField</a></li><li><a href="global.html#FormItem">FormItem</a></li><li><a href="global.html#FormMessage">FormMessage</a></li><li><a href="global.html#FormRadioField">FormRadioField</a></li><li><a href="global.html#FormSelectField">FormSelectField</a></li><li><a href="global.html#FormSwitchField">FormSwitchField</a></li><li><a href="global.html#FormTextareaField">FormTextareaField</a></li><li><a href="global.html#GeneralSection">GeneralSection</a></li><li><a href="global.html#GlobalDeviceCheckbox">GlobalDeviceCheckbox</a></li><li><a href="global.html#GroupAccordion">GroupAccordion</a></li><li><a href="global.html#Header">Header</a></li><li><a href="global.html#HeaderDivider">HeaderDivider</a></li><li><a href="global.html#HeaderStyleEnum">HeaderStyleEnum</a></li><li><a href="global.html#IconComponent">IconComponent</a></li><li><a href="global.html#InfiniteVirtualTable">InfiniteVirtualTable</a></li><li><a href="global.html#Input">Input</a></li><li><a href="global.html#Label">Label</a></li><li><a href="global.html#LastUpdated">LastUpdated</a></li><li><a href="global.html#Layout">Layout</a></li><li><a href="global.html#LayoutSection">LayoutSection</a></li><li><a href="global.html#LazyLoader">LazyLoader</a></li><li><a href="global.html#Loader">Loader</a></li><li><a href="global.html#Loading">Loading</a></li><li><a href="global.html#LoadingDots">LoadingDots</a></li><li><a href="global.html#LoadingSpinner">LoadingSpinner</a></li><li><a href="global.html#Login">Login</a></li><li><a href="global.html#LoginForm">LoginForm</a></li><li><a href="global.html#MenuBar">MenuBar</a></li><li><a href="global.html#MultiStepForm">MultiStepForm</a></li><li><a href="global.html#NavigationBlockDialog">NavigationBlockDialog</a></li><li><a href="global.html#NavigationMenu">NavigationMenu</a></li><li><a href="global.html#NavigationMenuContent">NavigationMenuContent</a></li><li><a href="global.html#NavigationMenuIndicator">NavigationMenuIndicator</a></li><li><a href="global.html#NavigationMenuItem">NavigationMenuItem</a></li><li><a href="global.html#NavigationMenuLink">NavigationMenuLink</a></li><li><a href="global.html#NavigationMenuList">NavigationMenuList</a></li><li><a href="global.html#NavigationMenuTrigger">NavigationMenuTrigger</a></li><li><a href="global.html#NavigationMenuViewport">NavigationMenuViewport</a></li><li><a href="global.html#NavigationTabs">NavigationTabs</a></li><li><a href="global.html#NotAuth">NotAuth</a></li><li><a href="global.html#NotFound">NotFound</a></li><li><a href="global.html#Popover">Popover</a></li><li><a href="global.html#PopoverContent">PopoverContent</a></li><li><a href="global.html#PopoverTrigger">PopoverTrigger</a></li><li><a href="global.html#PreviewSection">PreviewSection</a></li><li><a href="global.html#PreviewWidget">PreviewWidget</a></li><li><a href="global.html#PropertySelectTable">PropertySelectTable</a></li><li><a href="global.html#PropertySelector">PropertySelector</a></li><li><a href="global.html#PropertyTable">PropertyTable</a></li><li><a href="global.html#QuestionTooltip">QuestionTooltip</a></li><li><a href="global.html#RadioGroup">RadioGroup</a></li><li><a href="global.html#RadioGroupItem">RadioGroupItem</a></li><li><a href="global.html#RenderEmptyStateMessage">RenderEmptyStateMessage</a></li><li><a href="global.html#RoutingProvider">RoutingProvider</a></li><li><a href="global.html#RowActions">RowActions</a></li><li><a href="global.html#ScrollArea">ScrollArea</a></li><li><a href="global.html#ScrollBar">ScrollBar</a></li><li><a href="global.html#SearchDeviceTree">SearchDeviceTree</a></li><li><a href="global.html#Select">Select</a></li><li><a href="global.html#SelectContent">SelectContent</a></li><li><a href="global.html#SelectGroup">SelectGroup</a></li><li><a href="global.html#SelectItem">SelectItem</a></li><li><a href="global.html#SelectLabel">SelectLabel</a></li><li><a href="global.html#SelectTrigger">SelectTrigger</a></li><li><a href="global.html#SelectValue">SelectValue</a></li><li><a href="global.html#SelectWidget">SelectWidget</a></li><li><a href="global.html#Separator">Separator</a></li><li><a href="global.html#Sheet">Sheet</a></li><li><a href="global.html#SheetContent">SheetContent</a></li><li><a href="global.html#SheetDescription">SheetDescription</a></li><li><a href="global.html#SheetFooter">SheetFooter</a></li><li><a href="global.html#SheetHeader">SheetHeader</a></li><li><a href="global.html#SheetOverlay">SheetOverlay</a></li><li><a href="global.html#SheetTitle">SheetTitle</a></li><li><a href="global.html#Sidebar">Sidebar</a></li><li><a href="global.html#SidebarAccordionItem">SidebarAccordionItem</a></li><li><a href="global.html#SidebarContext">SidebarContext</a></li><li><a href="global.html#SidebarItem">SidebarItem</a></li><li><a href="global.html#StandardVirtualTable">StandardVirtualTable</a></li><li><a href="global.html#StaticDashboard">StaticDashboard</a></li><li><a href="global.html#StaticWidgetWrapper">StaticWidgetWrapper</a></li><li><a href="global.html#Status">Status</a></li><li><a href="global.html#StepperIndicator">StepperIndicator</a></li><li><a href="global.html#Switch">Switch</a></li><li><a href="global.html#TabItem">TabItem</a></li><li><a href="global.html#Table">Table</a></li><li><a href="global.html#TableBody">TableBody</a></li><li><a href="global.html#TableCaption">TableCaption</a></li><li><a href="global.html#TableCell">TableCell</a></li><li><a href="global.html#TableFooter">TableFooter</a></li><li><a href="global.html#TableHead">TableHead</a></li><li><a href="global.html#TableHeader">TableHeader</a></li><li><a href="global.html#TableRow">TableRow</a></li><li><a href="global.html#Tabs">Tabs</a></li><li><a href="global.html#TabsContent">TabsContent</a></li><li><a href="global.html#TabsList">TabsList</a></li><li><a href="global.html#TabsTrigger">TabsTrigger</a></li><li><a href="global.html#Textarea">Textarea</a></li><li><a href="global.html#Toast">Toast</a></li><li><a href="global.html#ToastAction">ToastAction</a></li><li><a href="global.html#ToastClose">ToastClose</a></li><li><a href="global.html#ToastDescription">ToastDescription</a></li><li><a href="global.html#ToastProvider">ToastProvider</a></li><li><a href="global.html#ToastTitle">ToastTitle</a></li><li><a href="global.html#ToastViewport">ToastViewport</a></li><li><a href="global.html#Toaster">Toaster</a></li><li><a href="global.html#Tooltip">Tooltip</a></li><li><a href="global.html#TooltipContent">TooltipContent</a></li><li><a href="global.html#TooltipProvider">TooltipProvider</a></li><li><a href="global.html#TooltipTrigger">TooltipTrigger</a></li><li><a href="global.html#TreeItem">TreeItem</a></li><li><a href="global.html#TreeParent">TreeParent</a></li><li><a href="global.html#UltivisDeviceProvider">UltivisDeviceProvider</a></li><li><a href="global.html#UserApiProvider">UserApiProvider</a></li><li><a href="global.html#UserInfoForm">UserInfoForm</a></li><li><a href="global.html#UserMenu">UserMenu</a></li><li><a href="global.html#UserMenuItem">UserMenuItem</a></li><li><a href="global.html#UserSetting">UserSetting</a></li><li><a href="global.html#VirtualTable">VirtualTable</a></li><li><a href="global.html#VirtualTableContent">VirtualTableContent</a></li><li><a href="global.html#WidgetDatePicker">WidgetDatePicker</a></li><li><a href="global.html#WidgetDialog">WidgetDialog</a></li><li><a href="global.html#addAccessedDashboardId">addAccessedDashboardId</a></li><li><a href="global.html#addLanguagePack">addLanguagePack</a></li><li><a href="global.html#alarmPeriod">alarmPeriod</a></li><li><a href="global.html#autoLogin">autoLogin</a></li><li><a href="global.html#badgeVariantIcons">badgeVariantIcons</a></li><li><a href="global.html#badgeVariantStyles">badgeVariantStyles</a></li><li><a href="global.html#badgeVariants">badgeVariants</a></li><li><a href="global.html#baseSchema">baseSchema</a></li><li><a href="global.html#buttonVariants">buttonVariants</a></li><li><a href="global.html#calculateBreakpoint">calculateBreakpoint</a></li><li><a href="global.html#calculateDateRange">calculateDateRange</a></li><li><a href="global.html#calculateGridLayout">calculateGridLayout</a></li><li><a href="global.html#chartDisplayOptions">chartDisplayOptions</a></li><li><a href="global.html#chartTypeOptions">chartTypeOptions</a></li><li><a href="global.html#checkApplicationAvailable">checkApplicationAvailable</a></li><li><a href="global.html#checkCredential">checkCredential</a></li><li><a href="global.html#checkRole">checkRole</a></li><li><a href="global.html#cn">cn</a></li><li><a href="global.html#createC8yAuthApi">createC8yAuthApi</a></li><li><a href="global.html#createC8yDashboardApi">createC8yDashboardApi</a></li><li><a href="global.html#createC8yUserApi">createC8yUserApi</a></li><li><a href="global.html#createChildDashboard">createChildDashboard</a></li><li><a href="global.html#createDashboard">createDashboard</a></li><li><a href="global.html#createEmptyDashboard">createEmptyDashboard</a></li><li><a href="global.html#createOperation">createOperation</a></li><li><a href="global.html#customPeriod">customPeriod</a></li><li><a href="global.html#dataMinMaxRequireSchema">dataMinMaxRequireSchema</a></li><li><a href="global.html#dataRequireSchema">dataRequireSchema</a></li><li><a href="global.html#dataSchema">dataSchema</a></li><li><a href="global.html#deleteDashboard">deleteDashboard</a></li><li><a href="global.html#deviceSchema">deviceSchema</a></li><li><a href="global.html#deviceTypeDashboardForDevice">deviceTypeDashboardForDevice</a></li><li><a href="global.html#encodeAuth">encodeAuth</a></li><li><a href="global.html#ensureDynamicFormat">ensureDynamicFormat</a></li><li><a href="global.html#eventSchema">eventSchema</a></li><li><a href="global.html#fontSchema">fontSchema</a></li><li><a href="global.html#fontWeightSchema">fontWeightSchema</a></li><li><a href="global.html#fontWeights">fontWeights</a></li><li><a href="global.html#fonts">fonts</a></li><li><a href="global.html#getActiveData">getActiveData</a></li><li><a href="global.html#getAlarms">getAlarms</a></li><li><a href="global.html#getAllInventory">getAllInventory</a></li><li><a href="global.html#getApiMap">getApiMap</a></li><li><a href="global.html#getApplicationsByUser">getApplicationsByUser</a></li><li><a href="global.html#getBinary">getBinary</a></li><li><a href="global.html#getBreakpoints">getBreakpoints</a></li><li><a href="global.html#getChildAssetsList">getChildAssetsList</a></li><li><a href="global.html#getChildAssetsListPaging">getChildAssetsListPaging</a></li><li><a href="global.html#getChildDevicesList">getChildDevicesList</a></li><li><a href="global.html#getClient">getClient</a></li><li><a href="global.html#getCols">getCols</a></li><li><a href="global.html#getComputedType">getComputedType</a></li><li><a href="global.html#getCurrentUser">getCurrentUser</a></li><li><a href="global.html#getDashboard">getDashboard</a></li><li><a href="global.html#getDashboards">getDashboards</a></li><li><a href="global.html#getDataPoints">getDataPoints</a></li><li><a href="global.html#getDatapointsFromLocal">getDatapointsFromLocal</a></li><li><a href="global.html#getDevice">getDevice</a></li><li><a href="global.html#getEvents">getEvents</a></li><li><a href="global.html#getEventsByDate">getEventsByDate</a></li><li><a href="global.html#getEventsByFragment">getEventsByFragment</a></li><li><a href="global.html#getEventsByType">getEventsByType</a></li><li><a href="global.html#getExternalId">getExternalId</a></li><li><a href="global.html#getFetchClient">getFetchClient</a></li><li><a href="global.html#getInventory">getInventory</a></li><li><a href="global.html#getInventoryByFragmentType">getInventoryByFragmentType</a></li><li><a href="global.html#getInventoryByText">getInventoryByText</a></li><li><a href="global.html#getLoginOptions">getLoginOptions</a></li><li><a href="global.html#getMeasurements">getMeasurements</a></li><li><a href="global.html#getMeasurementsByDate">getMeasurementsByDate</a></li><li><a href="global.html#getMeasurementsByFragment">getMeasurementsByFragment</a></li><li><a href="global.html#getMeasurementsBySeries">getMeasurementsBySeries</a></li><li><a href="global.html#getMinSize">getMinSize</a></li><li><a href="global.html#getSchema">getSchema</a></li><li><a href="global.html#getSupported">getSupported</a></li><li><a href="global.html#getTargetPath">getTargetPath</a></li><li><a href="global.html#getTypesFromLocal">getTypesFromLocal</a></li><li><a href="global.html#getWidgetWidth">getWidgetWidth</a></li><li><a href="global.html#getWindowSize">getWindowSize</a></li><li><a href="global.html#hasAccessedDashboardId">hasAccessedDashboardId</a></li><li><a href="global.html#homeDeviceInventory">homeDeviceInventory</a></li><li><a href="global.html#homeGroupInventory">homeGroupInventory</a></li><li><a href="global.html#humanizeAppName">humanizeAppName</a></li><li><a href="global.html#initRoles">initRoles</a></li><li><a href="global.html#initializeDynamicState">initializeDynamicState</a></li><li><a href="global.html#initializeState">initializeState</a></li><li><a href="global.html#intervalSchema">intervalSchema</a></li><li><a href="global.html#intervals">intervals</a></li><li><a href="global.html#isC8yDashboard">isC8yDashboard</a></li><li><a href="global.html#isDevice">isDevice</a></li><li><a href="global.html#isSameDatapoint">isSameDatapoint</a></li><li><a href="global.html#isSameId">isSameId</a></li><li><a href="global.html#isSameType">isSameType</a></li><li><a href="global.html#list">list</a></li><li><a href="global.html#load">load</a></li><li><a href="global.html#login">login</a></li><li><a href="global.html#logout">logout</a></li><li><a href="global.html#manageRole">manageRole</a></li><li><a href="global.html#managedObjectSchema">managedObjectSchema</a></li><li><a href="global.html#measurementSchema">measurementSchema</a></li><li><a href="global.html#navigationMenuTriggerStyle">navigationMenuTriggerStyle</a></li><li><a href="global.html#period">period</a></li><li><a href="global.html#periodSchema">periodSchema</a></li><li><a href="global.html#postChildAssetToParent">postChildAssetToParent</a></li><li><a href="global.html#postChildAssets">postChildAssets</a></li><li><a href="global.html#postChildInventory">postChildInventory</a></li><li><a href="global.html#postEvents">postEvents</a></li><li><a href="global.html#postInventory">postInventory</a></li><li><a href="global.html#propertySchema">propertySchema</a></li><li><a href="global.html#putAlarm">putAlarm</a></li><li><a href="global.html#putCurrentUser">putCurrentUser</a></li><li><a href="global.html#putDataPoints">putDataPoints</a></li><li><a href="global.html#putInventory">putInventory</a></li><li><a href="global.html#putPassword">putPassword</a></li><li><a href="global.html#realtimeSub">realtimeSub</a></li><li><a href="global.html#realtimeUnSub">realtimeUnSub</a></li><li><a href="global.html#reducer">reducer</a></li><li><a href="global.html#register">register</a></li><li><a href="global.html#registerList">registerList</a></li><li><a href="global.html#removeChildAssetToParent">removeChildAssetToParent</a></li><li><a href="global.html#removeInventory">removeInventory</a></li><li><a href="global.html#resetPassword">resetPassword</a></li><li><a href="global.html#resetQueryDeleteInvalidated">resetQueryDeleteInvalidated</a></li><li><a href="global.html#resetQueryInvalidated">resetQueryInvalidated</a></li><li><a href="global.html#resolveBreakpoint">resolveBreakpoint</a></li><li><a href="global.html#setAccess">setAccess</a></li><li><a href="global.html#setBasicAuth">setBasicAuth</a></li><li><a href="global.html#setDatapointsToLocal">setDatapointsToLocal</a></li><li><a href="global.html#setIsDevice">setIsDevice</a></li><li><a href="global.html#setIsFullScreen">setIsFullScreen</a></li><li><a href="global.html#setTypesToLocal">setTypesToLocal</a></li><li><a href="global.html#sheetVariants">sheetVariants</a></li><li><a href="global.html#sizeVariants">sizeVariants</a></li><li><a href="global.html#tenantSchema">tenantSchema</a></li><li><a href="global.html#textSchema">textSchema</a></li><li><a href="global.html#toC8yDashboard">toC8yDashboard</a></li><li><a href="global.html#toDynamicDashboard">toDynamicDashboard</a></li><li><a href="global.html#toggleFullScreen">toggleFullScreen</a></li><li><a href="global.html#updateDashboard">updateDashboard</a></li><li><a href="global.html#useApi">useApi</a></li><li><a href="global.html#useAuth">useAuth</a></li><li><a href="global.html#useAuthApi">useAuthApi</a></li><li><a href="global.html#useBranding">useBranding</a></li><li><a href="global.html#useC8yAuth">useC8yAuth</a></li><li><a href="global.html#useCardRenderer">useCardRenderer</a></li><li><a href="global.html#useCarousel">useCarousel</a></li><li><a href="global.html#useCustomMutation">useCustomMutation</a></li><li><a href="global.html#useDark">useDark</a></li><li><a href="global.html#useDashboard">useDashboard</a></li><li><a href="global.html#useDashboardActions">useDashboardActions</a></li><li><a href="global.html#useDashboardApi">useDashboardApi</a></li><li><a href="global.html#useDashboardDate">useDashboardDate</a></li><li><a href="global.html#useDataManager">useDataManager</a></li><li><a href="global.html#useDatapointActions">useDatapointActions</a></li><li><a href="global.html#useDeviceInventory">useDeviceInventory</a></li><li><a href="global.html#useDeviceTree">useDeviceTree</a></li><li><a href="global.html#useDraftDashboard">useDraftDashboard</a></li><li><a href="global.html#useDynamicDashboard">useDynamicDashboard</a></li><li><a href="global.html#useDynamicDashboardActions">useDynamicDashboardActions</a></li><li><a href="global.html#useFormField">useFormField</a></li><li><a href="global.html#useFullscreenListener">useFullscreenListener</a></li><li><a href="global.html#useInfiniteVirtualTable">useInfiniteVirtualTable</a></li><li><a href="global.html#useIntersectionObserver">useIntersectionObserver</a></li><li><a href="global.html#useInventoryContext">useInventoryContext</a></li><li><a href="global.html#useRoleStore">useRoleStore</a></li><li><a href="global.html#useRouting">useRouting</a></li><li><a href="global.html#useSidebarContext">useSidebarContext</a></li><li><a href="global.html#useSidebarStore">useSidebarStore</a></li><li><a href="global.html#useToast">useToast</a></li><li><a href="global.html#useTransitionNavigate">useTransitionNavigate</a></li><li><a href="global.html#useTranslation">useTranslation</a></li><li><a href="global.html#useUltivisDeviceContext">useUltivisDeviceContext</a></li><li><a href="global.html#useUltivisLogic">useUltivisLogic</a></li><li><a href="global.html#useUpdateForTypeDashboard">useUpdateForTypeDashboard</a></li><li><a href="global.html#useUpdatedConfig">useUpdatedConfig</a></li><li><a href="global.html#useUserAgentStore">useUserAgentStore</a></li><li><a href="global.html#useUserApi">useUserApi</a></li><li><a href="global.html#useWidgetSize">useWidgetSize</a></li><li><a href="global.html#widgetManager">widgetManager</a></li><li><a href="global.html#yAxisPositionOptions">yAxisPositionOptions</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Tue Dec 02 2025 01:16:34 GMT+0900 (대한민국 표준시)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Thu Dec 11 2025 23:31:31 GMT+0900 (대한민국 표준시)
 </footer>
 
 <script> prettyPrint(); </script>
